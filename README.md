@@ -3,6 +3,8 @@ I wanted to add ice and lava layers, but got much more ideas in process!!
 
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/Nashet/Interactive-Erosion.svg?columns=all)](https://waffle.io/Nashet/Interactive-Erosion)
 
+<img src="https://i.imgur.com/Bxg7RKQ.png" width="480">
+
 Heavy screenshots:
 
 https://i.imgur.com/FGxkEwy.jpg
