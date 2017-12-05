@@ -1,4 +1,17 @@
-# Interactive-Erosion
+# Why forked
+I wanted to add ice and lava layers, but got much more ideas in process!!
+
+[![Waffle.io - Columns and their card count](https://badge.waffle.io/Nashet/Interactive-Erosion.svg?columns=all)](https://waffle.io/Nashet/Interactive-Erosion)
+
+Heavy screenshots:
+
+https://i.imgur.com/FGxkEwy.jpg
+
+https://i.imgur.com/kWZczeV.jpg
+
+https://i.imgur.com/oLm71P8.jpg
+
+# Interactive-Erosion (original text)
 
 This project is based on the excellent article Interactive Terrain Modeling Using Hydraulic Erosion. The Authors were also kind enough to publish the code in ShaderX7 which is what a lot of this Unity project is based on. I have made some changes and left some things out. 
 
