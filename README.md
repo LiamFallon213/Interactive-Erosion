@@ -13,6 +13,15 @@ https://i.imgur.com/kWZczeV.jpg
 
 https://i.imgur.com/oLm71P8.jpg
 
+# How to setup
+
+Basicly you just need to install Unity 5.6.1 (other releases could be incompatible, free version is enough). Then open project in Unity. Then open scene in unity, it's on bottom of "project" tab. It should be ready.
+One note - value of some publiс fields are overwritten by unity inspector, you'll see it after meeting with inspector.
+
+I try to keep master branch stable more or less.
+I build for default settings, Windows _86. Hopefully, there wouldn't be problems with shaders compilation for your platform.
+Also, MS Visual Studio might be helpful
+
 # Interactive-Erosion (original text)
 
 This project is based on the excellent article Interactive Terrain Modeling Using Hydraulic Erosion. The Authors were also kind enough to publish the code in ShaderX7 which is what a lot of this Unity project is based on. I have made some changes and left some things out. 
