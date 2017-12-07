@@ -20,8 +20,8 @@ Shader "Erosion/LandShader"
 		#pragma target 3.0
 		#pragma glsl
 
-		uniform sampler2D _MainTex;
-		uniform float3 _LayerColor0, _LayerColor1, _LayerColor2, _LayerColor3;
+		sampler2D _MainTex;
+		float3 _LayerColor0, _LayerColor1, _LayerColor2, _LayerColor3;
 		uniform float _ScaleY, _Layers, _TexSize;
 		
 		struct Input 
@@ -36,11 +36,12 @@ Shader "Erosion/LandShader"
 			return dot(texData, addVec);
 		}
 		
+		
 		void vert(inout appdata_full v) 
 		{
 			v.tangent = float4(1,0,0,1);
 		
-			v.vertex.y += GetTotalHeight(tex2Dlod(_MainTex, float4(v.texcoord.xy, 0.0, 0.0))) * _ScaleY;
+			v.vertex.y += GetTotalHeight(tex2Dlod(_MainTex, float4(v.texcoord.xy, 0.0, 0.0))) * _ScaleY;		
 		}
 		
 		float3 FindNormal(float2 uv, float u)

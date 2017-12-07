@@ -16,7 +16,7 @@ namespace InterativeErosionProject
     {
         public GameObject m_sun;
         ///<summary> Used for rendering</summary>
-        public Material m_landMat, m_waterMat;
+        public Material m_landMat, m_waterMat, arrowsMat;
         ///<summary> Used for rendering</summary>
         public Material[] overlays;
 
@@ -126,9 +126,8 @@ namespace InterativeErosionProject
         /// <summary>Evaporation rate of water</summary>
         private float m_evaporationConstant = 0.001f;
 
-        /// <summary> Movement speed of point of water source</summary>
+        /// <summary> Rain power</summary>
         private float m_rainInputAmount = 0.001f;
-
 
         /// <summary>Viscosity of regolith</summary>
         public float m_regolithDamping = 0.85f;
@@ -136,7 +135,7 @@ namespace InterativeErosionProject
         /// <summary> Viscosity of water</summary>        
         public float m_waterDamping = 0.0f;
 
-        /// <summary>Higher number will increase dissolution rate</summary>
+        /// <summary>Higher number will increase dissolution rate. Or not</summary>
         public float m_maxRegolith = 0.008f;
 
         public float oceanDestroySedimentsLevel = 0f;
@@ -145,7 +144,7 @@ namespace InterativeErosionProject
         public int oceanWidth = 110;
 
         ///<summary> Meshes</summary>
-        private GameObject[] m_gridLand, m_gridWater;
+        private GameObject[] m_gridLand, m_gridWater, arrowsObject;
 
         ///<summary> Contains all 4 layers in ARGB</summary>
 
@@ -558,10 +557,10 @@ namespace InterativeErosionProject
                 overlays[currentOverlay.getID()].SetVector("_LayerColor2", layersColors[2]);
                 overlays[currentOverlay.getID()].SetVector("_LayerColor3", layersColors[3]);
 
-                m_landMat.SetFloat("_ScaleY", scaleY);
-                m_landMat.SetFloat("_TexSize", (float)TEX_SIZE);
-                m_landMat.SetTexture("_MainTex", m_terrainField.READ);
-                m_landMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
+                overlays[currentOverlay.getID()].SetFloat("_ScaleY", scaleY);
+                overlays[currentOverlay.getID()].SetFloat("_TexSize", (float)TEX_SIZE);
+                overlays[currentOverlay.getID()].SetTexture("_MainTex", m_terrainField.READ);
+                overlays[currentOverlay.getID()].SetFloat("_Layers", (float)TERRAIN_LAYERS);
             }
             else if (currentOverlay == Overlay.Deposition)
             {
@@ -586,6 +585,16 @@ namespace InterativeErosionProject
             m_waterMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
             m_waterMat.SetVector("_SunDir", m_sun.transform.forward * -1.0f);
             m_waterMat.SetVector("_SedimentColor", new Vector4(1f - 0.808f, 1f - 0.404f, 1f - 0.00f, 1f));
+
+            arrowsMat.SetFloat("_ScaleY", scaleY);
+            arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
+            arrowsMat.SetTexture("_Terrain", m_terrainField.READ);
+            arrowsMat.SetTexture("_Water", m_waterField.READ);
+            arrowsMat.SetTexture("_WaterVelocity", m_waterVelocity.READ);
+            arrowsMat.SetFloat("_LengthMultiplier", 0.2f);
+            arrowsMat.SetFloat("_Width", 0.03f);
+
+
             //foreach (var item in m_gridLand)
             //{
             //    item.GetComponent<MeshCollider>().sharedMesh = item.GetComponent<MeshFilter>().mesh;
@@ -689,6 +698,7 @@ namespace InterativeErosionProject
 
             m_gridLand = new GameObject[numGrids * numGrids];
             m_gridWater = new GameObject[numGrids * numGrids];
+            arrowsObject = new GameObject[numGrids * numGrids];
 
             for (int x = 0; x < numGrids; x++)
             {
@@ -699,7 +709,7 @@ namespace InterativeErosionProject
                     int posX = x * (GRID_SIZE - 1);
                     int posY = y * (GRID_SIZE - 1);
 
-                    Mesh mesh = MakeMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY);
+                    Mesh mesh = MakeGridMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY);
 
                     mesh.bounds = new Bounds(new Vector3(GRID_SIZE / 2, 0, GRID_SIZE / 2), new Vector3(GRID_SIZE, TERRAIN_HEIGHT * 2, GRID_SIZE));
 
@@ -722,11 +732,19 @@ namespace InterativeErosionProject
                     m_gridWater[idx].GetComponent<MeshFilter>().mesh = mesh;
                     m_gridWater[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
                     m_gridWater[idx].transform.SetParent(this.transform);
+
+                    arrowsObject[idx] = new GameObject("Arrows " + idx.ToString());
+                    arrowsObject[idx].AddComponent<MeshFilter>();
+                    arrowsObject[idx].AddComponent<MeshRenderer>();
+                    arrowsObject[idx].GetComponent<Renderer>().material = arrowsMat;
+                    arrowsObject[idx].GetComponent<MeshFilter>().mesh = MakeArrowsMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY);
+                    arrowsObject[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
+                    arrowsObject[idx].transform.SetParent(this.transform);
                 }
             }
         }
 
-        private Mesh MakeMesh(int size, int totalSize, int posX, int posY)
+        private Mesh MakeGridMesh(int size, int totalSize, int posX, int posY)
         {
 
             Vector3[] vertices = new Vector3[size * size];
@@ -760,6 +778,66 @@ namespace InterativeErosionProject
                     indices[num++] = x + (y + 1) * size;
                     indices[num++] = (x + 1) + (y + 1) * size;
                     indices[num++] = (x + 1) + y * size;
+                }
+            }
+
+            Mesh mesh = new Mesh();
+
+            mesh.vertices = vertices;
+            mesh.uv = texcoords;
+            mesh.triangles = indices;
+            mesh.normals = normals;
+
+            return mesh;
+        }
+        private Mesh MakeArrowsMesh(int size, int totalSize, int posX, int posY)
+        {
+
+            Vector3[] vertices = new Vector3[size * size * 3];
+            Vector2[] texcoords = new Vector2[size * size * 3];
+            Vector3[] normals = new Vector3[size * size * 3];
+            int[] indices = new int[size * size * 6];
+
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    Vector2 uv = new Vector3((posX + x) / (totalSize - 1.0f), (posY + y) / (totalSize - 1.0f));
+                    Vector3 pos = new Vector3(x, 0.0f, y);
+                    Vector3 norm = new Vector3(0.0f, 1.0f, 0.0f);
+                    texcoords[(x + y * size) * 3 + 0] = uv;
+                    vertices[(x + y * size) * 3 + 0] = pos;
+                    normals[(x + y * size) * 3 + 0] = norm;
+
+                    pos = new Vector3(x + 0.0f, 0.0f, y);
+                    norm = new Vector3(0.0f, 1.0f, 0.0f);
+                    
+                    texcoords[(x + y * size) * 3 + 1] = uv;
+                    vertices[(x + y * size) * 3 + 1] = pos;
+                    normals[(x + y * size) * 3 + 1] = norm;
+
+                    pos = new Vector3(x, 0.0f, y + 0.0f);
+                    norm = new Vector3(0.0f, 1.0f, 0.0f);
+                    
+                    texcoords[(x + y * size) * 3 + 2] = uv;
+                    vertices[(x + y * size) * 3 + 2] = pos;
+                    normals[(x + y * size) * 3 + 2] = norm;
+                }
+            }
+
+            int num = 0;
+            for (int x = 0; x < size - 1; x++)
+            {
+                for (int y = 0; y < size - 1; y++)
+                {
+                    indices[num++] = 3 * (x + y * size) + 2;
+                    indices[num++] = 3 * (x + y * size) + 1;
+                    indices[num++] = 3 * (x + y * size) + 0;
+
+
+                    //indices[num++] = x + (y + 1) * size;
+                    //indices[num++] = (x + 1) + (y + 1) * size;
+                    //indices[num++] = (x + 1) + y * size;
                 }
             }
 
