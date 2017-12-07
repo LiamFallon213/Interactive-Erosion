@@ -126,6 +126,9 @@ namespace InterativeErosionProject
         /// <summary>Evaporation rate of water</summary>
         private float m_evaporationConstant = 0.001f;
 
+        ///<summary>Used to draw arrows</summary>
+        private float arrowMultiplier = 0.2f;
+
         /// <summary> Rain power</summary>
         private float m_rainInputAmount = 0.001f;
 
@@ -144,7 +147,7 @@ namespace InterativeErosionProject
         public int oceanWidth = 110;
 
         ///<summary> Meshes</summary>
-        private GameObject[] m_gridLand, m_gridWater, arrowsObject;
+        private GameObject[] m_gridLand, m_gridWater, arrowsObjects;
 
         ///<summary> Contains all 4 layers in ARGB</summary>
 
@@ -575,6 +578,16 @@ namespace InterativeErosionProject
                 overlays[currentOverlay.getID()].SetTexture("_SedimentDepositionField", sedimentDeposition.READ);
                 overlays[currentOverlay.getID()].SetFloat("_Layers", (float)TERRAIN_LAYERS);
             }
+            else if (currentOverlay == Overlay.WaterSpeed)
+            {
+                arrowsMat.SetFloat("_ScaleY", scaleY);
+                arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
+                arrowsMat.SetTexture("_Terrain", m_terrainField.READ);
+                arrowsMat.SetTexture("_Water", m_waterField.READ);
+                arrowsMat.SetTexture("_WaterVelocity", m_waterVelocity.READ);
+                arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
+                arrowsMat.SetFloat("_Width", 0.03f);
+            }
 
             m_waterMat.SetTexture("_SedimentField", m_sedimentField.READ);
             m_waterMat.SetTexture("_VelocityField", m_waterVelocity.READ);
@@ -586,14 +599,7 @@ namespace InterativeErosionProject
             m_waterMat.SetVector("_SunDir", m_sun.transform.forward * -1.0f);
             m_waterMat.SetVector("_SedimentColor", new Vector4(1f - 0.808f, 1f - 0.404f, 1f - 0.00f, 1f));
 
-            arrowsMat.SetFloat("_ScaleY", scaleY);
-            arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
-            arrowsMat.SetTexture("_Terrain", m_terrainField.READ);
-            arrowsMat.SetTexture("_Water", m_waterField.READ);
-            arrowsMat.SetTexture("_WaterVelocity", m_waterVelocity.READ);
-            arrowsMat.SetFloat("_LengthMultiplier", 0.2f);
-            arrowsMat.SetFloat("_Width", 0.03f);
-
+           
 
             //foreach (var item in m_gridLand)
             //{
@@ -698,7 +704,7 @@ namespace InterativeErosionProject
 
             m_gridLand = new GameObject[numGrids * numGrids];
             m_gridWater = new GameObject[numGrids * numGrids];
-            arrowsObject = new GameObject[numGrids * numGrids];
+            arrowsObjects = new GameObject[numGrids * numGrids];
 
             for (int x = 0; x < numGrids; x++)
             {
@@ -733,15 +739,17 @@ namespace InterativeErosionProject
                     m_gridWater[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
                     m_gridWater[idx].transform.SetParent(this.transform);
 
-                    arrowsObject[idx] = new GameObject("Arrows " + idx.ToString());
-                    arrowsObject[idx].AddComponent<MeshFilter>();
-                    arrowsObject[idx].AddComponent<MeshRenderer>();
-                    arrowsObject[idx].GetComponent<Renderer>().material = arrowsMat;
-                    arrowsObject[idx].GetComponent<MeshFilter>().mesh = MakeArrowsMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY);
-                    arrowsObject[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
-                    arrowsObject[idx].transform.SetParent(this.transform);
+                    arrowsObjects[idx] = new GameObject("Arrows " + idx.ToString());
+                    arrowsObjects[idx].AddComponent<MeshFilter>();
+                    arrowsObjects[idx].AddComponent<MeshRenderer>();
+                    arrowsObjects[idx].GetComponent<Renderer>().material = arrowsMat;
+                    arrowsObjects[idx].GetComponent<MeshFilter>().mesh = MakeArrowsMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY);
+                    arrowsObjects[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
+                    arrowsObjects[idx].transform.SetParent(this.transform);
                 }
             }
+            foreach (var item in arrowsObjects)
+                item.SetActive(false);
         }
 
         private Mesh MakeGridMesh(int size, int totalSize, int posX, int posY)
@@ -811,14 +819,14 @@ namespace InterativeErosionProject
 
                     pos = new Vector3(x + 0.0f, 0.0f, y);
                     norm = new Vector3(0.0f, 1.0f, 0.0f);
-                    
+
                     texcoords[(x + y * size) * 3 + 1] = uv;
                     vertices[(x + y * size) * 3 + 1] = pos;
                     normals[(x + y * size) * 3 + 1] = norm;
 
                     pos = new Vector3(x, 0.0f, y + 0.0f);
                     norm = new Vector3(0.0f, 1.0f, 0.0f);
-                    
+
                     texcoords[(x + y * size) * 3 + 2] = uv;
                     vertices[(x + y * size) * 3 + 2] = pos;
                     normals[(x + y * size) * 3 + 2] = norm;
@@ -1088,12 +1096,25 @@ namespace InterativeErosionProject
         {
             m_evaporationConstant = value;
         }
+        public void SetArrowMultiplier(float value)
+        {
+            arrowMultiplier = value;
+        }
         public void SetOverlay(Overlay overlay)
         {
             this.currentOverlay = overlay;
-            foreach (var item in m_gridLand)
+
+            if (currentOverlay == Overlay.WaterSpeed)
+                foreach (var item in arrowsObjects)
+                    item.SetActive(true);
+            else
             {
-                item.GetComponent<Renderer>().material = overlays[overlay.getID()];
+                foreach (var item in m_gridLand)
+                {
+                    item.GetComponent<Renderer>().material = overlays[overlay.getID()];
+                }
+                foreach (var item in arrowsObjects)
+                    item.SetActive(false);
             }
         }
     }
