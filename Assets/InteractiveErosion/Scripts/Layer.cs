@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace InterativeErosionProject
@@ -10,14 +9,20 @@ namespace InterativeErosionProject
     /// <summary>
     /// Encapsulates operations with 1 data matrix (has 2 textures for write-read operations)
     /// </summary>
+    /// 
+    [System.Serializable]
     public class DataTexture
     {
         static private readonly List<DataTexture> all = new List<DataTexture>();
         static private readonly RenderTexture tempRTARGB, tempRTRFloat;
         static private Texture2D tempT2DRGBA, tempT2DRFloat;
-        static private Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat, changeValueGaussMat, changeValueGaussZeroControlMat;
+        static private Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat,
+            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat;
         ///<summary> Contains data</summary>
-        private readonly RenderTexture[] textures = new RenderTexture[2];
+
+        [SerializeField]//readonly
+        private  RenderTexture[] textures = new RenderTexture[2];
+        
         private readonly int size;
         public RenderTexture READ
         {
@@ -64,6 +69,7 @@ namespace InterativeErosionProject
             getValueMat = Resources.Load("Materials/UniversalCS/GetValue", typeof(Material)) as Material;
             changeValueGaussMat = Resources.Load("Materials/UniversalCS/ChangeValueGauss", typeof(Material)) as Material;
             changeValueGaussZeroControlMat = Resources.Load("Materials/UniversalCS/ChangeValueGaussZeroControl", typeof(Material)) as Material;
+            setRandomValueMat =  Resources.Load("Materials/UniversalCS/SetRandomValue", typeof(Material)) as Material;
         }
         public static void DestroyAll()
         {
@@ -230,6 +236,14 @@ namespace InterativeErosionProject
             {
                 textures[i].filterMode = mode;
             }
+        }
+
+        internal void SetRandomValue(Vector4 limits, int chance)
+        {
+            setRandomValueMat.SetVector("_Limits", limits);
+            setRandomValueMat.SetInt("_Chance", chance);
+            Graphics.Blit(this.READ, this.WRITE, setRandomValueMat);
+            this.Swap();
         }
     }
 }

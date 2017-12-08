@@ -152,41 +152,57 @@ namespace InterativeErosionProject
         ///<summary> Contains all 4 layers in ARGB</summary>
 
         [SerializeField]
-        public DataTexture m_terrainField;
+        private DataTexture m_terrainField;
 
+        [SerializeField]
         ///<summary></summary>        
-        public DataTexture m_advectSediment;
+        private DataTexture m_advectSediment;
 
+        [SerializeField]
         ///<summary> Actual amount of dissolved sediment in water</summary>
-        public DataTexture m_sedimentField;
-        public RenderTexture sedimentOutFlow;
+        private DataTexture m_sedimentField;
 
+        [SerializeField]
         ///<summary> Actual amount of dissolved sediment in water</summary>
-        public DataTexture sedimentDeposition;
+        private DataTexture sedimentDeposition;
 
+        [SerializeField]
         ///<summary> Contains regolith amount.Regolith is quasi-liquid at the bottom of water flow</summary>
-        public DataTexture m_regolithField;
+        private DataTexture m_regolithField;
 
+        [SerializeField]
         ///<summary> Moved regolith amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB</summary>
-        public DataTexture m_regolithOutFlow;
+        private DataTexture m_regolithOutFlow;
 
+        [SerializeField]
         ///<summary> Contains water amount. Can't be negative!!</summary>
-        public DataTexture m_waterField;
+        private DataTexture m_waterField;
 
+        [SerializeField]
         ///<summary> Moved water amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB. Keeps only positive numbers</summary>
-        public DataTexture m_waterOutFlow;
+        private DataTexture m_waterOutFlow;
 
+        [SerializeField]
         ///<summary> Water speed (1 channel)</summary>
-        public DataTexture m_waterVelocity;
+        private DataTexture m_waterVelocity;
 
+        [SerializeField]
         ///<summary> Contains surface angels for each point. Used in water erosion only (Why?)</summary>
-        public RenderTexture m_tiltAngle;
+        private RenderTexture m_tiltAngle;
 
+        [SerializeField]
         ///<summary> Used for non-water erosion aka slippering of material</summary>
-        public RenderTexture m_slippageHeight;
+        private RenderTexture m_slippageHeight;
 
+        [SerializeField]
         ///<summary> Used for non-water erosion aka slippering of material. ARGB in format: A - flowLeft, R - flowR, G -  flowT, B - flowB</summary></summary>
-        public RenderTexture m_slippageOutflow;
+        private RenderTexture m_slippageOutflow;
+
+        [SerializeField]
+        private RenderTexture sedimentOutFlow;
+
+        [SerializeField]
+        public DataTexture magmaVelocity;
 
 
         private Rect m_rectLeft, m_rectRight, m_rectTop, m_rectBottom, withoutEdges, entireMap;
@@ -222,8 +238,7 @@ namespace InterativeErosionProject
             new Vector4(91f, 91f, 99f, 355f).normalized,
             new Vector4(113,52,21,355).normalized,
             new Vector4(157,156,0, 255).normalized };
-
-        public RenderTexture sediment;
+        
 
         private void Start()
         {
@@ -271,15 +286,19 @@ namespace InterativeErosionProject
             sedimentDeposition = new DataTexture("Sediment Deposition", TEX_SIZE, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
             sedimentOutFlow = DataTexture.Create("sedimentOutFlow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);// was RHalf
 
-            //m_regolithField = new DataTexture("Regolith Field", TEX_SIZE, RenderTextureFormat.RFloat, FilterMode.Point);
-            // m_regolithOutFlow = new DataTexture("Regolith outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);
+            m_regolithField = new DataTexture("Regolith Field", TEX_SIZE, RenderTextureFormat.RFloat, FilterMode.Point);
+            m_regolithOutFlow = new DataTexture("Regolith outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);
 
 
             m_tiltAngle = DataTexture.Create("Tilt Angle", TEX_SIZE, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
             m_slippageHeight = DataTexture.Create("Slippage Height", TEX_SIZE, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
             m_slippageOutflow = DataTexture.Create("Slippage Outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);// was ARGBHalf
 
-            sediment = m_sedimentField.READ;
+            
+
+
+            magmaVelocity = new DataTexture("Magma Velocity", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf
+           
         }
 
         /// <summary>
@@ -599,7 +618,7 @@ namespace InterativeErosionProject
             m_waterMat.SetVector("_SunDir", m_sun.transform.forward * -1.0f);
             m_waterMat.SetVector("_SedimentColor", new Vector4(1f - 0.808f, 1f - 0.404f, 1f - 0.00f, 1f));
 
-           
+
 
             //foreach (var item in m_gridLand)
             //{
@@ -614,8 +633,12 @@ namespace InterativeErosionProject
             m_advectSediment.ClearColor();
             m_waterField.ClearColor();
             m_sedimentField.ClearColor();
-            //m_regolithField.ClearColor();
-            //m_regolithOutFlow.ClearColor();
+            m_regolithField.ClearColor();
+            m_regolithOutFlow.ClearColor();
+            sedimentDeposition.ClearColor();
+            magmaVelocity.ClearColor();
+
+
 
             DataTexture noiseTex;
 
@@ -1082,6 +1105,10 @@ namespace InterativeErosionProject
         public void SetBrushPower(float value)
         {
             brushPower = value;
+            magmaVelocity.SetRandomValue(new Vector4(1f, 1f, 0.3f, 0f), 100);
+            magmaVelocity.ChangeValueGauss(new Vector2(0.5f, 0.5f), 0.2f, 0.02f, new Vector4(1, 1, 10));
+
+
         }
         public void SetWaterZFighting(float value)
         {
