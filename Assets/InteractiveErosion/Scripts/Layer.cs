@@ -21,8 +21,8 @@ namespace InterativeErosionProject
         ///<summary> Contains data</summary>
 
         [SerializeField]//readonly
-        private  RenderTexture[] textures = new RenderTexture[2];
-        
+        private RenderTexture[] textures = new RenderTexture[2];
+
         private readonly int size;
         public RenderTexture READ
         {
@@ -47,7 +47,7 @@ namespace InterativeErosionProject
             tempT2DRFloat.filterMode = FilterMode.Point;
             LoadMaterials();
         }
-        
+
         public DataTexture(string name, int size, RenderTextureFormat format, FilterMode filterMode)
         {
 
@@ -69,7 +69,7 @@ namespace InterativeErosionProject
             getValueMat = Resources.Load("Materials/UniversalCS/GetValue", typeof(Material)) as Material;
             changeValueGaussMat = Resources.Load("Materials/UniversalCS/ChangeValueGauss", typeof(Material)) as Material;
             changeValueGaussZeroControlMat = Resources.Load("Materials/UniversalCS/ChangeValueGaussZeroControl", typeof(Material)) as Material;
-            setRandomValueMat =  Resources.Load("Materials/UniversalCS/SetRandomValue", typeof(Material)) as Material;
+            setRandomValueMat = Resources.Load("Materials/UniversalCS/SetRandomValue", typeof(Material)) as Material;
         }
         public static void DestroyAll()
         {
@@ -202,7 +202,7 @@ namespace InterativeErosionProject
         }
         public void ChangeValueZeroControl(float value, Rect rect)
         {
-            changeValueZeroControlMat.SetFloat("_Value", value );
+            changeValueZeroControlMat.SetFloat("_Value", value);
             Graphics.Blit(this.READ, this.WRITE, changeValueZeroControlMat);
             this.Swap();
         }
@@ -244,6 +244,11 @@ namespace InterativeErosionProject
             setRandomValueMat.SetInt("_Chance", chance);
             Graphics.Blit(this.READ, this.WRITE, setRandomValueMat);
             this.Swap();
+        }
+
+        internal void Set(RenderTexture tex)
+        {
+            textures[0] = tex;
         }
     }
 }

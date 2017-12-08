@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -175,7 +177,28 @@ namespace InterativeErosionProject
         {
             sim.SetOverlay(Overlay.getById(overlayDD.value));
         }
-
+        public void onLoadPlates()
+        {
+            var selected = EditorUtility.OpenFilePanelWithFilters("Select terrain texture", "", new string[] { "Image files", "png,jpg,jpeg" });//*.png;*.jpg;*.jpeg
+            if (selected != "")
+            {
+                //var tex = RTUtility.Load(Path.GetFileNameWithoutExtension(selected));
+                var tex = RTUtility.Load(selected);
+                if (tex != null)
+                    sim.SetMagmaVelocity(tex);
+            }
+        }
+        public void onLoadTerrain()
+        {
+            var selected = EditorUtility.OpenFilePanelWithFilters("Select terrain texture", "", new string[] { "Image files", "png,jpg,jpeg" });//*.png;*.jpg;*.jpeg
+            if (selected != "")
+            {
+                //var tex = RTUtility.Load(Path.GetFileNameWithoutExtension(selected));
+                var tex = RTUtility.Load(selected);
+                if (tex != null)
+                    sim.SetTerrain(tex);
+            }
+        }
         private int RaycastToPlain()
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);

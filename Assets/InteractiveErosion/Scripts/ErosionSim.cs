@@ -294,11 +294,7 @@ namespace InterativeErosionProject
             m_slippageHeight = DataTexture.Create("Slippage Height", TEX_SIZE, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
             m_slippageOutflow = DataTexture.Create("Slippage Outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);// was ARGBHalf
 
-            
-
-
-            magmaVelocity = new DataTexture("Magma Velocity", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf
-           
+            magmaVelocity = new DataTexture("Magma Velocity", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf          
         }
 
         /// <summary>
@@ -902,6 +898,14 @@ namespace InterativeErosionProject
         public void MakeMapFlat()
         {
             m_terrainField.SetValue(new Vector4(10f,2f,2f,2f), entireMap);
+        }
+        public void SetMagmaVelocity(RenderTexture tex)
+        {
+            magmaVelocity.Set(tex);
+        }
+        public void SetTerrain(RenderTexture tex)
+        {
+            m_terrainField.Set(tex);
         }
         public void AddToTerrainLayer(MaterialsForEditing layer, Vector2 point)
         {
