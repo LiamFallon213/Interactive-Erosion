@@ -238,7 +238,7 @@ namespace InterativeErosionProject
             new Vector4(91f, 91f, 99f, 355f).normalized,
             new Vector4(113,52,21,355).normalized,
             new Vector4(157,156,0, 255).normalized };
-        
+
 
         private void Start()
         {
@@ -549,6 +549,8 @@ namespace InterativeErosionProject
                 DisintegrateAndDeposit();
                 FlowLiquid(m_regolithField, m_regolithOutFlow, m_regolithDamping);
             }
+            if (simulateTectonics)
+                m_terrainField.MoveByVelocity(magmaVelocity.READ, 1f, 0.1f);
             if (simulateSlippage)
                 ApplySlippage();
 
@@ -897,7 +899,7 @@ namespace InterativeErosionProject
         }
         public void MakeMapFlat()
         {
-            m_terrainField.SetValue(new Vector4(10f,2f,2f,2f), entireMap);
+            m_terrainField.SetValue(new Vector4(10f, 2f, 2f, 2f), entireMap);
         }
         public void SetMagmaVelocity(RenderTexture tex)
         {
@@ -1121,6 +1123,11 @@ namespace InterativeErosionProject
         {
             simulateWaterErosion = value;
         }
+        private bool simulateTectonics;
+        public void SetSimulateTectonics(bool value)
+        {
+            simulateTectonics = value;
+        }
 
         private float brushSize = 0.001f;
         public void SetBrushSize(float value)
@@ -1131,8 +1138,8 @@ namespace InterativeErosionProject
         public void SetBrushPower(float value)
         {
             brushPower = value;
-            magmaVelocity.SetRandomValue(new Vector4(1f, 1f, 0.3f, 0f), 100);
-            magmaVelocity.ChangeValueGauss(new Vector2(0.5f, 0.5f), 0.2f, 0.02f, new Vector4(1, 1, 10));
+            //magmaVelocity.SetRandomValue(new Vector4(1f, 1f, 0.3f, 0f), 100);
+            //magmaVelocity.ChangeValueGauss(new Vector2(0.5f, 0.5f), 0.2f, 0.02f, new Vector4(1, 1, 10));
             //magmaVelocity.ChangeValue(new Vector4(0.5f, 0f, 0, 0f), getPartOfMap(WorldSides.North, 200));
 
 
@@ -1168,7 +1175,7 @@ namespace InterativeErosionProject
                 foreach (var item in m_gridLand)
                 {
                     item.GetComponent<Renderer>().material = currentOverlay.getMaterial();
-                }                
+                }
             }
         }
     }

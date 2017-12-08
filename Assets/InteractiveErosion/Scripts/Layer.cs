@@ -17,7 +17,7 @@ namespace InterativeErosionProject
         static private readonly RenderTexture tempRTARGB, tempRTRFloat;
         static private Texture2D tempT2DRGBA, tempT2DRFloat;
         static private Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat,
-            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat;
+            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat, moveByVelocityMat;
         ///<summary> Contains data</summary>
 
         [SerializeField]//readonly
@@ -70,6 +70,7 @@ namespace InterativeErosionProject
             changeValueGaussMat = Resources.Load("Materials/UniversalCS/ChangeValueGauss", typeof(Material)) as Material;
             changeValueGaussZeroControlMat = Resources.Load("Materials/UniversalCS/ChangeValueGaussZeroControl", typeof(Material)) as Material;
             setRandomValueMat = Resources.Load("Materials/UniversalCS/SetRandomValue", typeof(Material)) as Material;
+            moveByVelocityMat = Resources.Load("Materials/UniversalCS/MoveByVelocity", typeof(Material)) as Material;
         }
         public static void DestroyAll()
         {
@@ -249,6 +250,17 @@ namespace InterativeErosionProject
         internal void Set(RenderTexture tex)
         {
             textures[0] = tex;
+        }
+
+        internal void MoveByVelocity(RenderTexture velocity, float T, float coefficient)
+        {
+
+            moveByVelocityMat.SetFloat("T", T);
+            moveByVelocityMat.SetFloat("_Coefficient", coefficient);
+            moveByVelocityMat.SetFloat("_TexSize", (float)size);
+            moveByVelocityMat.SetTexture("_Velocity", velocity);
+            Graphics.Blit(this.READ, this.WRITE, moveByVelocityMat);
+            this.Swap();
         }
     }
 }
