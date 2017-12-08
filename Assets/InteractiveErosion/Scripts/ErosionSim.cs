@@ -18,7 +18,7 @@ namespace InterativeErosionProject
         ///<summary> Used for rendering</summary>
         public Material m_landMat, m_waterMat, arrowsMat;
         ///<summary> Used for rendering</summary>
-        public Material[] overlays;
+        //public Material[] overlays;
 
         public Material m_initTerrainMat, m_noiseMat;
         public Material m_outFlowMat;
@@ -49,7 +49,7 @@ namespace InterativeErosionProject
         private float waterDrainageAmount = 0f;
         private float waterDrainageRadius = 0.008f;
 
-        private int m_seed = 0;
+        public int m_seed = 0;
 
         //The number of layers used in the simulation. Must be 1, 2, 3 or, 4
         private const int TERRAIN_LAYERS = 4;
@@ -247,7 +247,7 @@ namespace InterativeErosionProject
             layersColors[2].a = 0.99f;
             layersColors[3].a = 0.9f;
             Application.runInBackground = true;
-            //m_seed = UnityEngine.Random.Range(0, int.MaxValue);
+            m_seed = UnityEngine.Random.Range(0, int.MaxValue);
 
             m_waterDamping = Mathf.Clamp01(m_waterDamping);
             m_regolithDamping = Mathf.Clamp01(m_regolithDamping);
@@ -574,36 +574,54 @@ namespace InterativeErosionProject
 
             if (currentOverlay == Overlay.Default)
             {
-                overlays[currentOverlay.getID()].SetVector("_LayerColor0", layersColors[0]);
-                overlays[currentOverlay.getID()].SetVector("_LayerColor1", layersColors[1]);
-                overlays[currentOverlay.getID()].SetVector("_LayerColor2", layersColors[2]);
-                overlays[currentOverlay.getID()].SetVector("_LayerColor3", layersColors[3]);
+                currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
+                currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
+                currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
+                currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
 
-                overlays[currentOverlay.getID()].SetFloat("_ScaleY", scaleY);
-                overlays[currentOverlay.getID()].SetFloat("_TexSize", (float)TEX_SIZE);
-                overlays[currentOverlay.getID()].SetTexture("_MainTex", m_terrainField.READ);
-                overlays[currentOverlay.getID()].SetFloat("_Layers", (float)TERRAIN_LAYERS);
+                currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
+                currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
+                currentOverlay.getMaterial().SetTexture("_MainTex", m_terrainField.READ);
+                currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
             }
             else if (currentOverlay == Overlay.Deposition)
             {
-                overlays[currentOverlay.getID()].SetVector("_LayerColor0", layersColors[0]);
-                overlays[currentOverlay.getID()].SetVector("_LayerColor1", layersColors[1]);
-                overlays[currentOverlay.getID()].SetVector("_LayerColor2", layersColors[2]);
-                overlays[currentOverlay.getID()].SetVector("_LayerColor3", layersColors[3]);
+                currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
+                currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
+                currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
+                currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
 
-                overlays[currentOverlay.getID()].SetFloat("_ScaleY", scaleY);
-                overlays[currentOverlay.getID()].SetFloat("_TexSize", (float)TEX_SIZE);
-                overlays[currentOverlay.getID()].SetTexture("_MainTex", m_terrainField.READ);
-                overlays[currentOverlay.getID()].SetTexture("_SedimentDepositionField", sedimentDeposition.READ);
-                overlays[currentOverlay.getID()].SetFloat("_Layers", (float)TERRAIN_LAYERS);
+                currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
+                currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
+                currentOverlay.getMaterial().SetTexture("_MainTex", m_terrainField.READ);
+                currentOverlay.getMaterial().SetTexture("_SedimentDepositionField", sedimentDeposition.READ);
+                currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
             }
-            else if (currentOverlay == Overlay.WaterSpeed)
+            else if (currentOverlay == Overlay.WaterVelocity)
             {
                 arrowsMat.SetFloat("_ScaleY", scaleY);
                 arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
                 arrowsMat.SetTexture("_Terrain", m_terrainField.READ);
                 arrowsMat.SetTexture("_Water", m_waterField.READ);
                 arrowsMat.SetTexture("_WaterVelocity", m_waterVelocity.READ);
+                arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
+                arrowsMat.SetFloat("_Width", 0.03f);
+            }
+            else if (currentOverlay == Overlay.Plates)
+            {
+                currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
+                currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
+                currentOverlay.getMaterial().SetTexture("_MainTex", m_terrainField.READ);
+                currentOverlay.getMaterial().SetTexture("_MagmaVelocity", magmaVelocity.READ);
+                currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
+            }
+            else if (currentOverlay == Overlay.PlatesVelocity)
+            {
+                arrowsMat.SetFloat("_ScaleY", scaleY);
+                arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
+                arrowsMat.SetTexture("_Terrain", m_terrainField.READ);
+                arrowsMat.SetTexture("_Water", m_waterField.READ);
+                arrowsMat.SetTexture("_WaterVelocity", magmaVelocity.READ);
                 arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
                 arrowsMat.SetFloat("_Width", 0.03f);
             }
@@ -881,6 +899,10 @@ namespace InterativeErosionProject
 
             return mesh;
         }
+        public void MakeMapFlat()
+        {
+            m_terrainField.SetValue(new Vector4(10f,2f,2f,2f), entireMap);
+        }
         public void AddToTerrainLayer(MaterialsForEditing layer, Vector2 point)
         {
             Vector4 layerMask = default(Vector4);
@@ -1107,6 +1129,7 @@ namespace InterativeErosionProject
             brushPower = value;
             magmaVelocity.SetRandomValue(new Vector4(1f, 1f, 0.3f, 0f), 100);
             magmaVelocity.ChangeValueGauss(new Vector2(0.5f, 0.5f), 0.2f, 0.02f, new Vector4(1, 1, 10));
+            //magmaVelocity.ChangeValue(new Vector4(0.5f, 0f, 0, 0f), getPartOfMap(WorldSides.North, 200));
 
 
         }
@@ -1131,17 +1154,17 @@ namespace InterativeErosionProject
         {
             this.currentOverlay = overlay;
 
-            if (currentOverlay == Overlay.WaterSpeed)
+            if (currentOverlay.isArrow())
                 foreach (var item in arrowsObjects)
                     item.SetActive(true);
             else
             {
-                foreach (var item in m_gridLand)
-                {
-                    item.GetComponent<Renderer>().material = overlays[overlay.getID()];
-                }
                 foreach (var item in arrowsObjects)
                     item.SetActive(false);
+                foreach (var item in m_gridLand)
+                {
+                    item.GetComponent<Renderer>().material = currentOverlay.getMaterial();
+                }                
             }
         }
     }

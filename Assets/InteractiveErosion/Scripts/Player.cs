@@ -17,7 +17,7 @@ namespace InterativeErosionProject
     //}
     public enum WorldSides
     {
-        None = 0, West = 1, North=2 , East= 4, South =8
+        None = 0, West = 1, North = 2, East = 4, South = 8
     }
     public class Point
     {
@@ -69,19 +69,27 @@ namespace InterativeErosionProject
     }
     public class Overlay
     {
-        private readonly string name;
-        private readonly Material material;
-        private readonly int ID;
         static private readonly List<Overlay> list = new List<Overlay>();
-        static public Overlay Default = new Overlay("Default", null);
-        static public Overlay Deposition = new Overlay("Deposition", null);
-        static public Overlay WaterSpeed = new Overlay("Water speed", null);
-        static public Overlay Info = new Overlay("Info", null);
-        private Overlay(string name, Material material)
+        //order is important!
+        static public readonly Overlay Default = new Overlay("Default", "LandShader", false);
+        static public readonly Overlay Deposition = new Overlay("Deposition", "DepositOverlay", false);
+        static public readonly Overlay WaterVelocity = new Overlay("Water velocity", null, true);
+        static public readonly Overlay Plates = new Overlay("Plates", "Plates", false);
+        static public readonly Overlay PlatesVelocity = new Overlay("Plates velocity", null, true);
+        private readonly string name;
+        private Material material;
+        private readonly string materialPath;
+        private readonly int ID;
+        private readonly bool _isArrow;
+
+
+        private Overlay(string name, string materialPath, bool _isArrow)
         {
             this.name = name;
-            this.material = material;
+            this._isArrow = _isArrow;
+            this.materialPath = materialPath;
             ID = list.Count;
+
             list.Add(this);
         }
         static public IEnumerable<Overlay> getAllPossible()
@@ -90,6 +98,16 @@ namespace InterativeErosionProject
             {
                 yield return item;
             }
+        }
+        public bool isArrow()
+        {
+            return _isArrow;
+        }
+        public Material getMaterial()
+        {
+            if (!isArrow() && material == null)
+                material = Resources.Load("Materials/Renders/" + materialPath, typeof(Material)) as Material;
+            return material;
         }
         public override string ToString()
         {
@@ -104,14 +122,14 @@ namespace InterativeErosionProject
         {
             return ID;
         }
-       
+
     }
     public enum MaterialsForEditing
     {
         stone,
         cobble, clay, sand,
-        water, watersource, waterdrain,  sediment
-        ,ocean
+        water, watersource, waterdrain, sediment
+        , ocean
     }
 }
 
