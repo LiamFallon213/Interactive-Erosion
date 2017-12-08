@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections;
-
+using MyExtensions;
 namespace InterativeErosionProject
 {
     static public class RTUtility
@@ -166,6 +166,28 @@ namespace InterativeErosionProject
             {
                 texs[i].filterMode = FilterMode.Bilinear;
             }
+        }
+        static public RenderTexture Load(string path)
+        {
+
+            Texture2D tex = Texture2DExtensions.LoadPNG(path);
+
+            if (tex == null)
+            {
+                Debug.Log("Can't load " + path + " texture");
+                return null;
+            }
+            var changeFormatTexture = new Texture2D(tex.width, tex.width, TextureFormat.RGBAFloat, false);
+            changeFormatTexture.SetPixels(tex.GetPixels());
+            changeFormatTexture.Apply();
+
+            var res = DataTexture.Create("Loaded", tex.width, RenderTextureFormat.ARGBFloat, FilterMode.Point);// was RHalf
+
+            Graphics.CopyTexture(changeFormatTexture, 0, 0, res, 0, 0);
+            GameObject.Destroy(tex);
+            GameObject.Destroy(changeFormatTexture);
+
+            return res;
         }
 
     }

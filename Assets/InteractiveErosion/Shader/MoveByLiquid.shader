@@ -48,10 +48,10 @@ Shader "Erosion/MoveByLiquid"
 		float sedimentWas = tex2D(_MainTex, IN.uv).x;
 
 		//= sedimentWas* liquidLevel / totalLiquid;
-		float flowL = sedimentWas* liquidFlow.x / totalLiquid
-		float flowR = sedimentWas* liquidFlow.y / totalLiquid
-		float flowT = sedimentWas* liquidFlow.z / totalLiquid
-		float flowB = sedimentWas* liquidFlow.w / totalLiquid
+		float flowL = sedimentWas* liquidFlow.x / totalLiquid;
+		float flowR = sedimentWas* liquidFlow.y / totalLiquid;
+		float flowT = sedimentWas* liquidFlow.z / totalLiquid;
+		float flowB = sedimentWas* liquidFlow.w / totalLiquid;
 			//write all five cells
 
 
