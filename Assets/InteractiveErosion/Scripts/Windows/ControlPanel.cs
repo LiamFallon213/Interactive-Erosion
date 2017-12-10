@@ -208,8 +208,10 @@ namespace InterativeErosionProject
                 // convert this to texture UV
                 lastClick = ray.GetPoint(rayDistance);
 
-                float xInTexture = (lastClick.x * 2f + ErosionSim.TOTAL_GRID_SIZE);
-                float yInTexture = (lastClick.z * 2f + ErosionSim.TOTAL_GRID_SIZE);
+                //
+                //float xInTexture = lastClick.x * ErosionSim.TEX_SIZE / ErosionSim.TOTAL_GRID_SIZE + ErosionSim.TOTAL_GRID_SIZE / 2;
+                float xInTexture = (lastClick.x  + ErosionSim.TOTAL_GRID_SIZE / 2)* ErosionSim.TEX_SIZE / ErosionSim.TOTAL_GRID_SIZE;
+                float yInTexture = (lastClick.z  + ErosionSim.TOTAL_GRID_SIZE / 2) * ErosionSim.TEX_SIZE / ErosionSim.TOTAL_GRID_SIZE;
 
                 if (xInTexture >= 0 && xInTexture <= ErosionSim.MAX_TEX_INDEX
                     && yInTexture >= 0 && yInTexture <= ErosionSim.MAX_TEX_INDEX)

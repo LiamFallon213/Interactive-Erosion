@@ -210,19 +210,19 @@ namespace InterativeErosionProject
 
         //The resolution of the textures used for the simulation. You can change this to any number
         //Does not have to be a pow2 number. You will run out of GPU memory if made to high.
-        public const int TEX_SIZE = 1024;//2048;
-        public const int MAX_TEX_INDEX = 1023;//2047;
+        public const int TEX_SIZE = 1024;//1024;//2048;//4096;
+        public const int MAX_TEX_INDEX = TEX_SIZE-1;//2047;
 
         ///<summary>The height of the terrain. You can change this</summary>
         private const int TERRAIN_HEIGHT = 128;
-        //This is the size and resolution of the terrain mesh you see
+        //This is the size and resolution of the terrain mesh you see (in vertexes)
         //You can change this but must be a pow2 number, ie 256, 512, 1024 etc
-        public const int TOTAL_GRID_SIZE = 512;
+        public const int TOTAL_GRID_SIZE = TEX_SIZE / 2; // TEX_SIZE /2;//512;//1024;
         //You can make this smaller but not larger
         private const float TIME_STEP = 0.1f;
 
-        ///<summary>Size of 1 mesh in meters</summary>
-        private const int GRID_SIZE = 128;
+        ///<summary>Size of 1 mesh in vertexes</summary>
+        private const int GRID_SIZE = 129; // don/t change it. It allows about 33k triangles in mesh, while maximum 65k
         private const float PIPE_LENGTH = 1.0f;
         private const float CELL_LENGTH = 1.0f;
         private const float CELL_AREA = 1.0f; //CELL_LENGTH*CELL_LENGTH
@@ -723,7 +723,7 @@ namespace InterativeErosionProject
             Destroy(sedimentOutFlow);
 
 
-            int numGrids = TOTAL_GRID_SIZE / GRID_SIZE;
+            int numGrids = TOTAL_GRID_SIZE / GRID_SIZE +1;
             for (int x = 0; x < numGrids; x++)
             {
                 for (int y = 0; y < numGrids; y++)
@@ -740,7 +740,7 @@ namespace InterativeErosionProject
 
         private void MakeGrids()
         {
-            int numGrids = TOTAL_GRID_SIZE / GRID_SIZE;
+            int numGrids = TOTAL_GRID_SIZE / GRID_SIZE +1;
 
             m_gridLand = new GameObject[numGrids * numGrids];
             m_gridWater = new GameObject[numGrids * numGrids];
@@ -754,7 +754,8 @@ namespace InterativeErosionProject
 
                     int posX = x * (GRID_SIZE - 1);
                     int posY = y * (GRID_SIZE - 1);
-
+                                        
+                    
                     Mesh mesh = MakeGridMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY);
 
                     mesh.bounds = new Bounds(new Vector3(GRID_SIZE / 2, 0, GRID_SIZE / 2), new Vector3(GRID_SIZE, TERRAIN_HEIGHT * 2, GRID_SIZE));
