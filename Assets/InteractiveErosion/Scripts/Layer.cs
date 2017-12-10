@@ -17,7 +17,7 @@ namespace InterativeErosionProject
         static private readonly RenderTexture tempRTARGB, tempRTRFloat;
         static private Texture2D tempT2DRGBA, tempT2DRFloat;
         static private Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat,
-            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat;
+            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat, moveByVelocityMat;
         ///<summary> Contains data</summary>
 
         [SerializeField]//readonly
@@ -57,6 +57,7 @@ namespace InterativeErosionProject
                 textures[i].wrapMode = TextureWrapMode.Clamp;
                 textures[i].filterMode = filterMode;
                 textures[i].name = name + " " + i;
+                textures[i].enableRandomWrite = true;
             }
             this.size = size;
             all.Add(this);
@@ -70,6 +71,7 @@ namespace InterativeErosionProject
             changeValueGaussMat = Resources.Load("Materials/UniversalCS/ChangeValueGauss", typeof(Material)) as Material;
             changeValueGaussZeroControlMat = Resources.Load("Materials/UniversalCS/ChangeValueGaussZeroControl", typeof(Material)) as Material;
             setRandomValueMat = Resources.Load("Materials/UniversalCS/SetRandomValue", typeof(Material)) as Material;
+            moveByVelocityMat = Resources.Load("Materials/UniversalCS/MoveByVelocity", typeof(Material)) as Material;
         }
         public static void DestroyAll()
         {
@@ -249,6 +251,32 @@ namespace InterativeErosionProject
         internal void Set(RenderTexture tex)
         {
             textures[0] = tex;
+        }
+
+        internal void MoveByVelocity(RenderTexture velocity, float T, float coefficient, float limit, ComputeShader shader)
+        {
+            // how it should be:
+            // move value by 1 cell, not every but at random tick
+            // movement rate is proportional to speed of plate
+            //int kernelHandle = shader.FindKernel("CSMain");            
+
+            //shader.SetTexture(kernelHandle, "_MainTex", this.READ);
+            //shader.SetTexture(kernelHandle, "_Velocity", velocity);
+
+            //shader.SetFloat("T", T);
+            //shader.SetFloat("_Coefficient", coefficient);
+            //shader.SetFloat("_TexSize", (float)size);
+            //shader.SetFloat("_Limit", limit);
+            //shader.Dispatch(kernelHandle, this.size / 8, this.size / 8, 1);
+
+            ///this.Swap();
+            moveByVelocityMat.SetFloat("T", T);
+            moveByVelocityMat.SetFloat("_Coefficient", coefficient);
+            moveByVelocityMat.SetFloat("_TexSize", (float)size);
+            moveByVelocityMat.SetFloat("_Limit", limit);
+            moveByVelocityMat.SetTexture("_Velocity", velocity);
+            Graphics.Blit(this.READ, this.WRITE, moveByVelocityMat);
+            this.Swap();
         }
     }
 }
