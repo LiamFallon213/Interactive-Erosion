@@ -1,4 +1,5 @@
 
+// NOT REALISTIC VERSION
 Shader "Erosion/MoveByVelocity"
 {
 	//UNITY_SHADER_NO_UPGRADE
@@ -19,8 +20,8 @@ Shader "Erosion/MoveByVelocity"
 #pragma vertex vert
 #pragma fragment frag
 
-	uniform sampler2D _MainTex;
-	uniform float T, _Coefficient, _TexSize;
+		sampler2D _MainTex;
+	uniform float T, _Coefficient, _TexSize, _Limit;
 	uniform sampler2D _Velocity;
 
 
@@ -46,7 +47,13 @@ Shader "Erosion/MoveByVelocity"
 	}
 	float4 frag(v2f IN) : COLOR
 	{
-		float deltaHL;
+
+		/*float2 velocity = tex2D(_Velocity, IN.uv).xy;
+		float4 thatPoint = tex2D(_MainTex, IN.uv);
+		tex2D(_MainTex, IN.uv + velocity).x += tex2D(_MainTex, IN.uv).x;
+		return float4(0, thatPoint.y, thatPoint.z,thatPoint.w);*/
+
+			float deltaHL;
 		float deltaHR;
 		float deltaHT;
 		float deltaHB;
@@ -59,42 +66,58 @@ Shader "Erosion/MoveByVelocity"
 		if (CoordsExist(side))
 		{
 			float flow = tex2D(_Velocity, side).x;
-			if (flow > 0.0)
+			float level = tex2D(_MainTex, side).x;
+			if (flow > 0.0 && level > _Limit + 1)
 				flowIn += flow;
 		}
 		side = IN.uv + float2(u, 0);
 		if (CoordsExist(side))
 		{
 			float flow = tex2D(_Velocity, side).x;
-			if (flow < 0.0)
+			float level = tex2D(_MainTex, side).x;
+			if (flow < 0.0&& level > _Limit + 1)
 				flowIn += abs(flow);
 		}
 		side = IN.uv + float2(0,-u);
 		if (CoordsExist(side))
 		{
 			float flow = tex2D(_Velocity, side).y;
-			if (flow > 0.0)
+			float level = tex2D(_MainTex, side).x;
+			if (flow > 0.0&& level > _Limit + 1)
 				flowIn += flow;
 		}
 		side = IN.uv + float2(0, u);
 		if (CoordsExist(side))
 		{
 			float flow = tex2D(_Velocity, side).y;
-			if (flow < 0.0)
+			float level = tex2D(_MainTex, side).x;
+			if (flow < 0.0&& level > _Limit + 1)
 				flowIn += abs(flow);
 		}
+		// add limits+ 
+		//add proportions
+		// add y vector+
 		float3 velocity = tex2D(_Velocity, IN.uv);
 		float flowAway = (abs(velocity.x) + abs(velocity.y)) * T * _Coefficient;
 
 		float4 level = tex2D(_MainTex, IN.uv);
-		level.x -= flowAway;
-		level.x += flowIn* T * _Coefficient;
+
+		float newLevel = level.x - flowAway;
+
+		if (newLevel < _Limit)
+			newLevel = _Limit;
+
+		level.x = newLevel;
+		level.x += flowIn * T * _Coefficient;
+		level.x += velocity.z * T * _Coefficient / 20.0;
 		return level;
 
-	}
+		}
 
-		ENDCG
-			}
+			ENDCG
+		}
 
 	}
 }
+
+

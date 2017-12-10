@@ -1,0 +1,26 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> _MainTex;
+RWTexture2D<float4> _Velocity;
+float T, _Coefficient, _TexSize, _Limit;
+
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	// TODO: insert actual code here!
+
+	//float2 velocity = _Velocity[id.xy].xy;
+	float4 thatPoint = _MainTex[id.xy];
+	//float4 destinationPoint = _MainTex[id.xy + velocity];
+	//float4 newValue = float4(destinationPoint.x + thatPoint.x, destinationPoint.y, destinationPoint.z, destinationPoint.w);
+	//_MainTex[id.xy + velocity] = newValue;
+	
+	//_MainTex[id.xy] = float4(0, thatPoint.y, thatPoint.z, thatPoint.w);
+	_MainTex[id.xy] = float4(thatPoint.x, thatPoint.y, thatPoint .z+3.0, thatPoint.w);
+	
+	//_MainTex[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+}

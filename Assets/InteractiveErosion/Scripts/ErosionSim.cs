@@ -14,6 +14,7 @@ namespace InterativeErosionProject
 
     public class ErosionSim : MonoBehaviour
     {
+        public ComputeShader shader;
         public GameObject m_sun;
         ///<summary> Used for rendering</summary>
         public Material m_landMat, m_waterMat, arrowsMat;
@@ -550,7 +551,7 @@ namespace InterativeErosionProject
                 FlowLiquid(m_regolithField, m_regolithOutFlow, m_regolithDamping);
             }
             if (simulateTectonics)
-                m_terrainField.MoveByVelocity(magmaVelocity.READ, 1f, 0.1f);
+                m_terrainField.MoveByVelocity(magmaVelocity.READ, 1f, 0.03f, 1f,  shader);
             if (simulateSlippage)
                 ApplySlippage();
 
@@ -899,7 +900,8 @@ namespace InterativeErosionProject
         }
         public void MakeMapFlat()
         {
-            m_terrainField.SetValue(new Vector4(10f, 2f, 2f, 2f), entireMap);
+            //m_terrainField.SetValue(new Vector4(10f, 2f, 2f, 2f), entireMap);
+            m_terrainField.SetValue(new Vector4(10f, 0f, 0f, 0f), entireMap);
         }
         public void SetMagmaVelocity(RenderTexture tex)
         {
