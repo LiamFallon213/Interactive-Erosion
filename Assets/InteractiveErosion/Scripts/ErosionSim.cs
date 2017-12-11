@@ -1187,6 +1187,10 @@ namespace InterativeErosionProject
         {
             sedimentCapacity = value;
         }
+        public void ScaleMapHeight(float value)
+        {
+            m_terrainField.Scale(value);
+        }
         public void SetOverlay(Overlay overlay)
         {
             this.currentOverlay = overlay;

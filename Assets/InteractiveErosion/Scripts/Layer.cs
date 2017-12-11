@@ -17,7 +17,8 @@ namespace InterativeErosionProject
         static private readonly RenderTexture tempRTARGB, tempRTRFloat;
         static private Texture2D tempT2DRGBA, tempT2DRFloat;
         static private Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat,
-            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat, moveByVelocityMat;
+            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat, moveByVelocityMat,
+            scaleMat;
         ///<summary> Contains data</summary>
 
         [SerializeField]//readonly
@@ -64,14 +65,16 @@ namespace InterativeErosionProject
         }
         static private void LoadMaterials()
         {
-            setFloatValueMat = Resources.Load("Materials/UniversalCS/SetFloatValue", typeof(Material)) as Material;
-            changeValueMat = Resources.Load("Materials/UniversalCS/ChangeValue", typeof(Material)) as Material;
-            changeValueZeroControlMat = Resources.Load("Materials/UniversalCS/ChangeValueZeroControl", typeof(Material)) as Material;
-            getValueMat = Resources.Load("Materials/UniversalCS/GetValue", typeof(Material)) as Material;
-            changeValueGaussMat = Resources.Load("Materials/UniversalCS/ChangeValueGauss", typeof(Material)) as Material;
-            changeValueGaussZeroControlMat = Resources.Load("Materials/UniversalCS/ChangeValueGaussZeroControl", typeof(Material)) as Material;
-            setRandomValueMat = Resources.Load("Materials/UniversalCS/SetRandomValue", typeof(Material)) as Material;
-            moveByVelocityMat = Resources.Load("Materials/UniversalCS/MoveByVelocity", typeof(Material)) as Material;
+            string path = "Materials/UniversalCS/";
+            setFloatValueMat = Resources.Load(path+"SetFloatValue", typeof(Material)) as Material;
+            changeValueMat = Resources.Load(path + "ChangeValue", typeof(Material)) as Material;
+            changeValueZeroControlMat = Resources.Load(path + "ChangeValueZeroControl", typeof(Material)) as Material;
+            getValueMat = Resources.Load(path + "GetValue", typeof(Material)) as Material;
+            changeValueGaussMat = Resources.Load(path + "ChangeValueGauss", typeof(Material)) as Material;
+            changeValueGaussZeroControlMat = Resources.Load(path + "ChangeValueGaussZeroControl", typeof(Material)) as Material;
+            setRandomValueMat = Resources.Load(path + "SetRandomValue", typeof(Material)) as Material;
+            moveByVelocityMat = Resources.Load(path + "MoveByVelocity", typeof(Material)) as Material;
+            scaleMat = Resources.Load(path + "Scale", typeof(Material)) as Material;
         }
         public static void DestroyAll()
         {
@@ -276,6 +279,13 @@ namespace InterativeErosionProject
             moveByVelocityMat.SetFloat("_Limit", limit);
             moveByVelocityMat.SetTexture("_Velocity", velocity);
             Graphics.Blit(this.READ, this.WRITE, moveByVelocityMat);
+            this.Swap();
+        }
+
+        internal void Scale(float value)
+        {
+            scaleMat.SetFloat("_Value", value);
+            Graphics.Blit(this.READ, this.WRITE, scaleMat);
             this.Swap();
         }
     }
