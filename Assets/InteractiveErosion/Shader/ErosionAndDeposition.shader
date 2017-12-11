@@ -76,6 +76,9 @@ Shader "Erosion/ErosionAndDeposition"
 				if (sediment > sedimentCapacityFactor)
 				{
 					//deposit it
+					/*float waterLevel = tex2D(_WaterField, IN.uv).x;
+					float sedimentPerWater = _SedimentCapacity * waterLevel;
+					if (sediment >  sedimentPerWater)*/
 					{
 						float sedimentDif = _DepositionConstant * (sediment - sedimentCapacityFactor);
 						finalSedimentDif -= sedimentDif;
@@ -85,8 +88,8 @@ Shader "Erosion/ErosionAndDeposition"
 				else
 				{
 					//dissolve it										
-					float waterLevel = tex2D(_WaterField, IN.uv).x;
-					if (waterLevel > _DissolveLimit)
+					//float waterLevel = tex2D(_WaterField, IN.uv).x;
+					//if (waterLevel > _DissolveLimit)
 					{
 
 					float layersHeight = 0.0;
