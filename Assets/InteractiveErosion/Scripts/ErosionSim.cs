@@ -116,10 +116,12 @@ namespace InterativeErosionProject
         public float m_minTiltAngle = 5f;//0.1f;
 
         /// <summary> How much sediment the water can carry per 1 unit of water </summary>
-        public float m_sedimentCapacity = 0.2f;
+        [SerializeField]
+        private float sedimentCapacity = 0.2f;
 
         /// <summary> Rate the sediment is deposited on top layer </summary>
-        public float m_depositionConstant = 0.015f;
+        [SerializeField]
+        private float depositionConstant = 0.015f;
 
         /// <summary> Terrain wouldn't dissolve if water level in cell is lower than this</summary>
         public float dissolveLimit = 0.001f;
@@ -211,7 +213,7 @@ namespace InterativeErosionProject
         //The resolution of the textures used for the simulation. You can change this to any number
         //Does not have to be a pow2 number. You will run out of GPU memory if made to high.
         public const int TEX_SIZE = 1024;//1024;//2048;//4096;
-        public const int MAX_TEX_INDEX = TEX_SIZE-1;//2047;
+        public const int MAX_TEX_INDEX = TEX_SIZE - 1;//2047;
 
         ///<summary>The height of the terrain. You can change this</summary>
         private const int TERRAIN_HEIGHT = 128;
@@ -347,9 +349,9 @@ namespace InterativeErosionProject
             m_erosionAndDepositionMat.SetTexture("_WaterField", m_waterField.READ);
             m_erosionAndDepositionMat.SetTexture("_TiltAngle", m_tiltAngle);
             m_erosionAndDepositionMat.SetFloat("_MinTiltAngle", m_minTiltAngle);
-            m_erosionAndDepositionMat.SetFloat("_SedimentCapacity", m_sedimentCapacity);
+            m_erosionAndDepositionMat.SetFloat("_SedimentCapacity", sedimentCapacity);
             m_erosionAndDepositionMat.SetVector("_DissolvingConstant", m_dissolvingConstant);
-            m_erosionAndDepositionMat.SetFloat("_DepositionConstant", m_depositionConstant);
+            m_erosionAndDepositionMat.SetFloat("_DepositionConstant", depositionConstant);
             m_erosionAndDepositionMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
             m_erosionAndDepositionMat.SetFloat("_DissolveLimit", dissolveLimit); //nash added it            
 
@@ -551,7 +553,7 @@ namespace InterativeErosionProject
                 FlowLiquid(m_regolithField, m_regolithOutFlow, m_regolithDamping);
             }
             if (simulateTectonics)
-                m_terrainField.MoveByVelocity(magmaVelocity.READ, 1f, 0.03f, 1f,  shader);
+                m_terrainField.MoveByVelocity(magmaVelocity.READ, 1f, 0.03f, 1f, shader);
             if (simulateSlippage)
                 ApplySlippage();
 
@@ -736,7 +738,7 @@ namespace InterativeErosionProject
             Destroy(sedimentOutFlow);
 
 
-            int numGrids = TOTAL_GRID_SIZE / GRID_SIZE +1;
+            int numGrids = TOTAL_GRID_SIZE / GRID_SIZE + 1;
             for (int x = 0; x < numGrids; x++)
             {
                 for (int y = 0; y < numGrids; y++)
@@ -753,7 +755,7 @@ namespace InterativeErosionProject
 
         private void MakeGrids()
         {
-            int numGrids = TOTAL_GRID_SIZE / GRID_SIZE +1;
+            int numGrids = TOTAL_GRID_SIZE / GRID_SIZE + 1;
 
             m_gridLand = new GameObject[numGrids * numGrids];
             m_gridWater = new GameObject[numGrids * numGrids];
@@ -767,8 +769,8 @@ namespace InterativeErosionProject
 
                     int posX = x * (GRID_SIZE - 1);
                     int posY = y * (GRID_SIZE - 1);
-                                        
-                    
+
+
                     Mesh mesh = MakeGridMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY);
 
                     mesh.bounds = new Bounds(new Vector3(GRID_SIZE / 2, 0, GRID_SIZE / 2), new Vector3(GRID_SIZE, TERRAIN_HEIGHT * 2, GRID_SIZE));
@@ -1176,6 +1178,14 @@ namespace InterativeErosionProject
         public void SetArrowMultiplier(float value)
         {
             arrowMultiplier = value;
+        }
+        public void SetDepositionRate(float value)
+        {
+            depositionConstant = value;
+        }
+        public void SetWaterSedimentCapacity(float value)
+        {
+            sedimentCapacity = value;
         }
         public void SetOverlay(Overlay overlay)
         {
