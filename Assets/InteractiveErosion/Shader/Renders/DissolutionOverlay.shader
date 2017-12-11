@@ -1,5 +1,5 @@
 
-Shader "Erosion/DepositsOverlay" 
+Shader "Erosion/DissolutionOverlay" 
 {
 	//UNITY_SHADER_NO_UPGRADE
 	Properties 
@@ -72,7 +72,8 @@ Shader "Erosion/DepositsOverlay"
 			o.Albedo = lerp(o.Albedo, _LayerColor3, clamp(hts.w * 2.0, 0.0, 1.0));
 			
 			float sediment = tex2D(_SedimentDepositionField, IN.uv_MainTex).x;
-			o.Albedo.r += sediment*300;			
+			if (sediment < 0.0)
+				o.Albedo.g += sediment * -300.0;
 
 			o.Alpha = 1.0;
 			o.Normal = n;

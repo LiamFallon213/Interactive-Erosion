@@ -70,9 +70,10 @@ namespace InterativeErosionProject
     public class Overlay
     {
         static private readonly List<Overlay> list = new List<Overlay>();
-        //order is important!
+        
         static public readonly Overlay Default = new Overlay("Default", "LandShader", false);
-        static public readonly Overlay Deposition = new Overlay("Deposition", "DepositOverlay", false);
+        static public readonly Overlay Deposition = new Overlay("Deposition", "DepositionOverlay", false);
+        static public readonly Overlay Dissolution = new Overlay("Dissolution", "DissolutionOverlay", false);
         static public readonly Overlay WaterVelocity = new Overlay("Water velocity", null, true);
         static public readonly Overlay Plates = new Overlay("Plates", "Plates", false);
         static public readonly Overlay PlatesVelocity = new Overlay("Plates velocity", null, true);

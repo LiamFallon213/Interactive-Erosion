@@ -217,7 +217,7 @@ namespace InterativeErosionProject
         private const int TERRAIN_HEIGHT = 128;
         //This is the size and resolution of the terrain mesh you see (in vertexes)
         //You can change this but must be a pow2 number, ie 256, 512, 1024 etc
-        public const int TOTAL_GRID_SIZE = TEX_SIZE / 2; // TEX_SIZE /2;//512;//1024;
+        public const int TOTAL_GRID_SIZE = 512;  // TEX_SIZE /2;//512;//1024;
         //You can make this smaller but not larger
         private const float TIME_STEP = 0.1f;
 
@@ -584,6 +584,19 @@ namespace InterativeErosionProject
                 currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
             }
             else if (currentOverlay == Overlay.Deposition)
+            {
+                currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
+                currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
+                currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
+                currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
+
+                currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
+                currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
+                currentOverlay.getMaterial().SetTexture("_MainTex", m_terrainField.READ);
+                currentOverlay.getMaterial().SetTexture("_SedimentDepositionField", sedimentDeposition.READ);
+                currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
+            }
+            else if (currentOverlay == Overlay.Dissolution)
             {
                 currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
                 currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);

@@ -61,8 +61,8 @@ Shader "Erosion/ErosionAndDeposition"
 
 				float velocity = length(tex2D(_VelocityField, IN.uv).xy);
 
-				//float sedimentCapacityFactor = _SedimentCapacity * tiltAngle * velocity;
-				float sedimentCapacityFactor  =  _SedimentCapacity * velocity;
+				float sedimentCapacityFactor = _SedimentCapacity * tiltAngle * velocity;
+				//float sedimentCapacityFactor  =  _SedimentCapacity * velocity;
 
 				float4 finalMaxSediment;
 				finalMaxSediment.x = sedimentCapacityFactor;
@@ -119,8 +119,8 @@ Shader "Erosion/ErosionAndDeposition"
 
 				OUT.col0 = terrain + terrainDif;
 				OUT.col1 = float4(sediment + finalSedimentDif, 0.0, 0.0 ,0.0);
-				OUT.col2 = min(finalSedimentDif, 0.0)*-1;
-				
+				OUT.col2 = finalSedimentDif * -1.0;
+
 				return OUT;
 			}
 
