@@ -22,7 +22,7 @@ namespace InterativeErosionProject
         private readonly ErosionSim link;
         public Layer(string name, int size, float viscosity, ErosionSim link)
         {
-            main = new DoubleDataTexture(name, size, RenderTextureFormat.RFloat, FilterMode.Point);
+            main = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point);
             outFlow = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBHalf, FilterMode.Point);
             this.viscosity = viscosity;
             this.link = link;
@@ -32,6 +32,7 @@ namespace InterativeErosionProject
         /// </summary>
         public void Flow(RenderTexture onWhat)
         {
+            main.SetFilterMode(FilterMode.Point);
             link.m_outFlowMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
             link.m_outFlowMat.SetFloat("T", 0.1f);
             link.m_outFlowMat.SetFloat("L", 1.0f);
@@ -47,12 +48,13 @@ namespace InterativeErosionProject
             outFlow.Swap(); ;
 
             link.m_fieldUpdateMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
-            link.m_fieldUpdateMat.SetFloat("T", 1f);
+            link.m_fieldUpdateMat.SetFloat("T", 0.1f);
             link.m_fieldUpdateMat.SetFloat("L", 1f);
             link.m_fieldUpdateMat.SetTexture("_OutFlowField", outFlow.READ);
 
             Graphics.Blit(main.READ, main.WRITE, link.m_fieldUpdateMat);
             main.Swap();
+            main.SetFilterMode(FilterMode.Bilinear);
         }
 
     }

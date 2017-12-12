@@ -31,7 +31,7 @@ namespace InterativeErosionProject
         public Material m_tiltAngleMat;
         ///<summary> Calculates layer erosion basing on the forces that are caused by the running water</summary>
         public Material m_processMacCormackMat;
-        public Material m_erosionAndDepositionMat;
+        public Material dissolutionAndDepositionMat;
         ///<summary> Creates new texture based on smoothed sediment data and size of texture(?)</summary>
         public Material m_advectSedimentMat;
         public Material m_slippageHeightMat, m_slippageOutflowMat, m_slippageUpdateMat;
@@ -249,7 +249,7 @@ namespace InterativeErosionProject
 
         private void Start()
         {
-            lava = new Layer("Lava", TEX_SIZE, 0.5f, this);
+            lava = new Layer("Lava", TEX_SIZE, 0.02f, this);
 
             layersColors[0].a = 0.98f;
             layersColors[1].a = 0.98f;
@@ -340,7 +340,7 @@ namespace InterativeErosionProject
         ///  m_depositionConstant, m_tiltAngle, m_minTiltAngle
         /// Also calculates m_tiltAngle
         /// </summary>
-        private void ErosionAndDeposition()
+        private void DissolveAndDeposition()
         {
             m_tiltAngleMat.SetFloat("_TexSize", (float)TEX_SIZE);
             m_tiltAngleMat.SetFloat("_Layers", TERRAIN_LAYERS);
@@ -348,21 +348,21 @@ namespace InterativeErosionProject
 
             Graphics.Blit(null, tiltAngle, m_tiltAngleMat);
 
-            m_erosionAndDepositionMat.SetTexture("_TerrainField", terrainField.READ);
-            m_erosionAndDepositionMat.SetTexture("_SedimentField", sedimentField.READ);
-            m_erosionAndDepositionMat.SetTexture("_VelocityField", waterVelocity.READ);
-            m_erosionAndDepositionMat.SetTexture("_WaterField", waterField.READ);
-            m_erosionAndDepositionMat.SetTexture("_TiltAngle", tiltAngle);
-            m_erosionAndDepositionMat.SetFloat("_MinTiltAngle", minTiltAngle);
-            m_erosionAndDepositionMat.SetFloat("_SedimentCapacity", sedimentCapacity);
-            m_erosionAndDepositionMat.SetVector("_DissolvingConstant", dissolvingConstant);
-            m_erosionAndDepositionMat.SetFloat("_DepositionConstant", depositionConstant);
-            m_erosionAndDepositionMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
-            m_erosionAndDepositionMat.SetFloat("_DissolveLimit", dissolveLimit); //nash added it            
+            dissolutionAndDepositionMat.SetTexture("_TerrainField", terrainField.READ);
+            dissolutionAndDepositionMat.SetTexture("_SedimentField", sedimentField.READ);
+            dissolutionAndDepositionMat.SetTexture("_VelocityField", waterVelocity.READ);
+            dissolutionAndDepositionMat.SetTexture("_WaterField", waterField.READ);
+            dissolutionAndDepositionMat.SetTexture("_TiltAngle", tiltAngle);
+            dissolutionAndDepositionMat.SetFloat("_MinTiltAngle", minTiltAngle);
+            dissolutionAndDepositionMat.SetFloat("_SedimentCapacity", sedimentCapacity);
+            dissolutionAndDepositionMat.SetVector("_DissolvingConstant", dissolvingConstant);
+            dissolutionAndDepositionMat.SetFloat("_DepositionConstant", depositionConstant);
+            dissolutionAndDepositionMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
+            dissolutionAndDepositionMat.SetFloat("_DissolveLimit", dissolveLimit); //nash added it            
 
             RenderTexture[] terrainAndSediment = new RenderTexture[3] { terrainField.WRITE, sedimentField.WRITE, sedimentDeposition.WRITE };
 
-            RTUtility.MultiTargetBlit(terrainAndSediment, m_erosionAndDepositionMat);
+            RTUtility.MultiTargetBlit(terrainAndSediment, dissolutionAndDepositionMat);
             terrainField.Swap();
             sedimentField.Swap();
             sedimentDeposition.Swap();
@@ -546,14 +546,13 @@ namespace InterativeErosionProject
                 CalcWaterVelocity();
             }
 
-            lava.main.SetFilterMode(FilterMode.Point);
-            FlowLiquid(lava.main, lava.outFlow, 0.999f);
-            //lava.Flow(terrainField.READ);
-            lava.main.SetFilterMode(FilterMode.Bilinear);
+            
+            lava.Flow(terrainField.READ);
+            
 
             if (simulateWaterErosion)
             {
-                ErosionAndDeposition();
+                DissolveAndDeposition();
                 AdvectSediment();
                 //AlternativeAdvectSediment();
             }
