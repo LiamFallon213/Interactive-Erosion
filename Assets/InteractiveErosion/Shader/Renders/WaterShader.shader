@@ -24,11 +24,11 @@ Shader "Erosion/WaterShader"
 		#pragma target 3.0
 		#pragma glsl
 
-		sampler2D _MainTex, _GrabTex, _CameraDepthTexture;
+		sampler2D _Terrain, _GrabTex, _CameraDepthTexture;
 		float4 _SkyColor, _WaterAbsorption;
 		float _FresnelFactor, _MinWaterHt, _SunSpecStr;
 		
-		uniform sampler2D _WaterField, _SedimentField, _VelocityField;
+		uniform sampler2D _WaterField, _SedimentField, _VelocityField, _Lava;
 		uniform float _ScaleY, _TexSize, _Layers;
 		uniform float3 _SunDir, _SedimentColor;
 		
@@ -54,8 +54,9 @@ Shader "Erosion/WaterShader"
 			
 			v.tangent = float4(1,0,0,1);
 		
-			v.vertex.y += GetTotalHeight(tex2Dlod(_MainTex, float4(v.texcoord.xy, 0.0, 0.0))) * _ScaleY;
+			v.vertex.y += GetTotalHeight(tex2Dlod(_Terrain, float4(v.texcoord.xy, 0.0, 0.0))) * _ScaleY;
 			v.vertex.y += tex2Dlod(_WaterField, float4(v.texcoord.xy, 0.0, 0.0)).x * _ScaleY;
+			v.vertex.y += tex2Dlod(_Lava, float4(v.texcoord.xy, 0.0, 0.0)).x * _ScaleY;
 			
 			float4 pos = mul (UNITY_MATRIX_MVP, v.vertex);
 			o.grabUV = ComputeGrabScreenPos(pos);
@@ -66,10 +67,10 @@ Shader "Erosion/WaterShader"
 		
 		float3 FindNormal(float2 uv, float u)
         {
-        	float ht0 = GetTotalHeight(tex2D(_MainTex, uv + float2(-u, 0)));
-            float ht1 = GetTotalHeight(tex2D(_MainTex, uv + float2(u, 0)));
-            float ht2 = GetTotalHeight(tex2D(_MainTex, uv + float2(0, -u)));
-            float ht3 = GetTotalHeight(tex2D(_MainTex, uv + float2(0, u)));
+        	float ht0 = GetTotalHeight(tex2D(_Terrain, uv + float2(-u, 0)));
+            float ht1 = GetTotalHeight(tex2D(_Terrain, uv + float2(u, 0)));
+            float ht2 = GetTotalHeight(tex2D(_Terrain, uv + float2(0, -u)));
+            float ht3 = GetTotalHeight(tex2D(_Terrain, uv + float2(0, u)));
       
             ht0 += tex2D(_WaterField, uv + float2(-u, 0)).x;
             ht1 += tex2D(_WaterField, uv + float2(u, 0)).x;
@@ -131,5 +132,5 @@ Shader "Erosion/WaterShader"
 		}
 		ENDCG
 	} 
-	FallBack "Diffuse"
+	FallBack "Diffuse" 
 }

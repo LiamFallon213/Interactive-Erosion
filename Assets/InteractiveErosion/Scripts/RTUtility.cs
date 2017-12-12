@@ -181,7 +181,7 @@ namespace InterativeErosionProject
             changeFormatTexture.SetPixels(tex.GetPixels());
             changeFormatTexture.Apply();
 
-            var res = DataTexture.Create("Loaded", tex.width, RenderTextureFormat.ARGBFloat, FilterMode.Point);// was RHalf
+            var res = DoubleDataTexture.Create("Loaded", tex.width, RenderTextureFormat.ARGBFloat, FilterMode.Point);// was RHalf
 
             Graphics.CopyTexture(changeFormatTexture, 0, 0, res, 0, 0);
             GameObject.Destroy(tex);
