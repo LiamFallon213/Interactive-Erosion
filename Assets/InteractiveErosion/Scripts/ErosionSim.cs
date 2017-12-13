@@ -249,7 +249,8 @@ namespace InterativeErosionProject
 
         private void Start()
         {
-            lava = new Layer("Lava", TEX_SIZE, 0.02f, this);
+            //lava = new Layer("Lava", TEX_SIZE, 0.02f, this);
+            lava = new Layer("Lava", TEX_SIZE, 1f, this);
 
             layersColors[0].a = 0.98f;
             layersColors[1].a = 0.98f;
@@ -533,7 +534,7 @@ namespace InterativeErosionProject
                     terrainField.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, waterDrainageAmount * -1f, new Vector4(0f, 0f, 0f, 1f));
                 }
 
-                // set specified levels of water and terrain at oceans
+                //set specified levels of water and terrain at oceans
                 foreach (var item in oceans)
                 {
                     Rect rect = getPartOfMap(item, 1);
@@ -546,9 +547,9 @@ namespace InterativeErosionProject
                 CalcWaterVelocity();
             }
 
-            
+
             lava.Flow(terrainField.READ);
-            
+
 
             if (simulateWaterErosion)
             {
@@ -565,9 +566,7 @@ namespace InterativeErosionProject
                 terrainField.MoveByVelocity(magmaVelocity.READ, 1f, 0.03f, 1f, shader);
             if (simulateSlippage)
                 ApplySlippage();
-
             
-
             terrainField.SetFilterMode(FilterMode.Bilinear);
             waterField.SetFilterMode(FilterMode.Bilinear);
             sedimentDeposition.SetFilterMode(FilterMode.Bilinear);
@@ -662,7 +661,7 @@ namespace InterativeErosionProject
             m_waterMat.SetVector("_SunDir", sun.transform.forward * -1.0f);
             m_waterMat.SetVector("_SedimentColor", new Vector4(1f - 0.808f, 1f - 0.404f, 1f - 0.00f, 1f));
 
-            
+
             lavaMat.SetFloat("_ScaleY", scaleY);
             lavaMat.SetFloat("_TexSize", (float)TEX_SIZE);
             lavaMat.SetTexture("_WaterField", lava.main.READ);
@@ -825,7 +824,7 @@ namespace InterativeErosionProject
                     gridWater[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
                     gridWater[idx].transform.SetParent(this.transform);
 
-                    
+
 
                     arrowsObjects[idx] = new GameObject("Arrows " + idx.ToString());
                     arrowsObjects[idx].AddComponent<MeshFilter>();
@@ -1072,41 +1071,41 @@ namespace InterativeErosionProject
         {
             // find to which border it's closer 
             WorldSides side = default(WorldSides);
-            int distToNorth = (int)Math.Abs(0 - point.x);
-            int distToSouth = (int)Math.Abs(MAX_TEX_INDEX - point.x);
-            int distToWest = (int)Math.Abs(0 - point.y);
-            int distToEast = (int)Math.Abs(MAX_TEX_INDEX - point.y);
+            float distToWest = Math.Abs(0f - point.x);
+            float distToEast = Math.Abs(1f - point.x);
+            float distToSouth = Math.Abs(0f - point.y);
+            float distToNorth = Math.Abs(1f - point.y);
 
             if (distToEast == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
-                side = WorldSides.North;
-            else if (distToWest == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
-                side = WorldSides.South;
-            else if (distToSouth == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
                 side = WorldSides.East;
-            else if (distToNorth == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
+            else if (distToWest == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
                 side = WorldSides.West;
+            else if (distToSouth == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
+                side = WorldSides.South;
+            else if (distToNorth == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
+                side = WorldSides.North;
 
             return side;
         }
-
+        
         public void AddOcean(Vector2 point)
         {
             var side = getSideOfWorld(point);
             if (!oceans.Contains(side))
-            {
+            {                        
                 oceans.Add(side);
-                //oceans = oceans & side;
-                // clear ocean bottom
-                terrainField.ChangeValue(new Vector4(oceanDepth * -1f, 0f, 0, 0f), getPartOfMap(side, oceanWidth));
+                //// clear ocean bottom
+                terrainField.ChangeValue(new Vector4(oceanDepth * -1f, 0f, 0, 0f), getPartOfMap(side, oceanWidth));        
             }
         }
+        
         public void RemoveOcean(Vector2 point)
         {
             var side = getSideOfWorld(point);
             if (oceans.Contains(side))
-            {
+            {        
                 oceans.Remove(side);
-                terrainField.ChangeValue(new Vector4(oceanDepth, 0f, 0f, 0f), getPartOfMap(side, oceanWidth));
+                terrainField.ChangeValue(new Vector4(oceanDepth, 0f, 0f, 0f), getPartOfMap(side, oceanWidth));             
             }
         }
 

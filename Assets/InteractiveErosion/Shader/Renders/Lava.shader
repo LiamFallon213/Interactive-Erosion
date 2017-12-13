@@ -10,7 +10,7 @@ Shader "Erosion/Lava"
 	}
 		SubShader
 	{
-		Tags{ "Queue" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
+		Tags{ "Queue" = "Geometry" "IgnoreProjector" = "True" "RenderType" = "Transparent" } 
 		LOD 200
 
 		GrabPass{ "_GrabTex" }
@@ -96,7 +96,7 @@ Shader "Erosion/Lava"
 
 		
 
-		float3 grab = tex2Dproj(_GrabTex, UNITY_PROJ_COORD(IN.grabUV)).rgb;
+		/*float3 grab = tex2Dproj(_GrabTex, UNITY_PROJ_COORD(IN.grabUV)).rgb;
 
 		float depth = Linear01Depth(tex2Dproj(_CameraDepthTexture,UNITY_PROJ_COORD(IN.projPos)).r);
 		float fragmentsDepth = Linear01Depth(IN.depth);
@@ -108,7 +108,7 @@ Shader "Erosion/Lava"
 		float3 AbsorptonCof = _WaterAbsorption.rgb * waterDepth * _WaterAbsorption.a;
 
 
-		float3 col = grab * exp(-AbsorptonCof*AbsorptonCof);
+		float3 col = grab * exp(-AbsorptonCof*AbsorptonCof);*/
 
 
 		o.Albedo = _WaterAbsorption;

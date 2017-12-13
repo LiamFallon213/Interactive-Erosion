@@ -166,7 +166,7 @@ namespace InterativeErosionProject
         }
         public void SetValue(Vector4 value, Rect rect)
         {
-            //Graphics.Blit(field.READ, field.WRITE);
+            Graphics.Blit(this.READ, this.WRITE);
             setFloatValueMat.SetVector("_Value", value);
             RTUtility.Blit(this.READ, this.WRITE, setFloatValueMat, rect, 0, false);
             this.Swap();
@@ -200,13 +200,14 @@ namespace InterativeErosionProject
         }
         public void ChangeValue(Vector4 value, Rect rect)
         {
-            //Graphics.Blit(field.READ, field.WRITE); // don't know why but need it
+            Graphics.Blit(this.READ, this.WRITE); // don't know why but need it
             changeValueMat.SetVector("_Value", value);
             RTUtility.Blit(this.READ, this.WRITE, changeValueMat, rect, 0, false);
             this.Swap();
         }
         public void ChangeValueZeroControl(float value, Rect rect)
         {
+            //Graphics.Blit(this.READ, this.WRITE); // don't know why but need it
             changeValueZeroControlMat.SetFloat("_Value", value);
             Graphics.Blit(this.READ, this.WRITE, changeValueZeroControlMat);
             this.Swap();
