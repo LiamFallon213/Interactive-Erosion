@@ -38,8 +38,6 @@ namespace InterativeErosionProject
         public Material m_disintegrateAndDepositMat, m_applyFreeSlipMat;
         public Material moveByLiquidMat;
 
-
-
         /// <summary> Movement speed of point of water source</summary>
         //private float m_waterInputSpeed = 0.01f;
         private Vector2 waterInputPoint = new Vector2(-1f, 1f);
@@ -212,7 +210,6 @@ namespace InterativeErosionProject
         [SerializeField]
         public Layer lava;
 
-        private Rect m_rectLeft, m_rectRight, m_rectTop, m_rectBottom, withoutEdges, entireMap;
 
         //The resolution of the textures used for the simulation. You can change this to any number
         //Does not have to be a pow2 number. You will run out of GPU memory if made to high.
@@ -233,13 +230,13 @@ namespace InterativeErosionProject
         private const float CELL_LENGTH = 1.0f;
         private const float CELL_AREA = 1.0f; //CELL_LENGTH*CELL_LENGTH
         public const float GRAVITY = 9.81f;
-        private const int READ = 0;
-        private const int WRITE = 1;
+
 
         private Overlay currentOverlay = Overlay.Default;
 
         //private readonly
-        public List<WorldSides> oceans = new List<WorldSides>();
+        [SerializeField]
+        private List<WorldSide> oceans = new List<WorldSide>();
         private readonly Color[] layersColors = new Color[4] {
             new Vector4(123,125,152,155).normalized,
             new Vector4(91f, 91f, 99f, 355f).normalized,
@@ -264,18 +261,7 @@ namespace InterativeErosionProject
 
             float u = 1.0f / (float)TEX_SIZE;
 
-            m_rectLeft = new Rect(0.0f, 0.0f, u, 1.0f);
-            m_rectRight = new Rect(1.0f - u, 0f, u, 1f);
-            //m_rectRight = new Rect(1.0f , 0.0f, 1, 1.0f);
 
-
-            m_rectBottom = new Rect(0.0f, 0.0f, 1.0f, u);
-            m_rectTop = new Rect(0.0f, 1f - u, 1.0f, u);
-            //m_rectTop = new Rect(0.0f, 1.0f, 1.0f, 1-u);
-
-
-            withoutEdges = new Rect(0.0f + u, 0.0f + u, 1.0f - u, 1.0f - u);
-            entireMap = new Rect(0f, 0f, 1f, 1f);
 
 
             InitLayers();
@@ -518,11 +504,11 @@ namespace InterativeErosionProject
                 /// Evaporate water everywhere 
                 if (evaporationConstant > 0.0f)
                 {
-                    waterField.ChangeValueZeroControl(evaporationConstant * -1f, entireMap);
+                    waterField.ChangeValueZeroControl(evaporationConstant * -1f);
                 }
                 if (rainInputAmount > 0.0f)
                 {
-                    waterField.ChangeValue(new Vector4(rainInputAmount, 0f, 0f, 0f), entireMap);
+                    waterField.ChangeValue(new Vector4(rainInputAmount, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
                 }
 
 
@@ -537,7 +523,7 @@ namespace InterativeErosionProject
                 //set specified levels of water and terrain at oceans
                 foreach (var item in oceans)
                 {
-                    Rect rect = getPartOfMap(item, 1);
+                    Rect rect = item.getPartOfMap(1);
                     waterField.SetValue(new Vector4(oceanWaterLevel, 0f, 0f, 0f), rect);
                     terrainField.SetValue(new Vector4(oceanDestroySedimentsLevel, 0f, 0f, 0f), rect);
                 }
@@ -566,7 +552,7 @@ namespace InterativeErosionProject
                 terrainField.MoveByVelocity(magmaVelocity.READ, 1f, 0.03f, 1f, shader);
             if (simulateSlippage)
                 ApplySlippage();
-            
+
             terrainField.SetFilterMode(FilterMode.Bilinear);
             waterField.SetFilterMode(FilterMode.Bilinear);
             sedimentDeposition.SetFilterMode(FilterMode.Bilinear);
@@ -948,7 +934,7 @@ namespace InterativeErosionProject
         public void MakeMapFlat()
         {
             //m_terrainField.SetValue(new Vector4(10f, 2f, 2f, 2f), entireMap);
-            terrainField.SetValue(new Vector4(10f, 0f, 0f, 0f), entireMap);
+            terrainField.SetValue(new Vector4(10f, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
         }
         public void SetMagmaVelocity(RenderTexture tex)
         {
@@ -1033,79 +1019,25 @@ namespace InterativeErosionProject
             waterDrainageRadius = brushSize;
             waterDrainageAmount = brushPower;
         }
-        /// <summary>
-        /// get rect-part of world texture according to world side
-        /// </summary>
-        private Rect getPartOfMap(WorldSides side, int width)
-        {
-            float offest = width / (float)TEX_SIZE;
-            Rect rect = default(Rect);
-            if (side == WorldSides.North)
-            {
-                rect = m_rectTop;
-                rect.height += offest;// *-1f;                
-                rect.y -= offest;
-            }
-            else if (side == WorldSides.South)
-            {
-                rect = m_rectBottom;
-                rect.height += offest;
-            }
-            else if (side == WorldSides.East)
-            {
-                rect = m_rectRight;
-                rect.x -= offest;
-                rect.width += offest;
-            }
-            else if (side == WorldSides.West)
-            {
-                rect = m_rectLeft;
-                rect.width += offest;// * -1f;
-            }
-            return rect;
-        }
-        /// <summary>
-        /// returns which side of map is closer to point - north, south, etc
-        /// </summary>
-        private WorldSides getSideOfWorld(Vector2 point)
-        {
-            // find to which border it's closer 
-            WorldSides side = default(WorldSides);
-            float distToWest = Math.Abs(0f - point.x);
-            float distToEast = Math.Abs(1f - point.x);
-            float distToSouth = Math.Abs(0f - point.y);
-            float distToNorth = Math.Abs(1f - point.y);
 
-            if (distToEast == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
-                side = WorldSides.East;
-            else if (distToWest == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
-                side = WorldSides.West;
-            else if (distToSouth == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
-                side = WorldSides.South;
-            else if (distToNorth == Math.Min(Math.Min(Math.Min(distToWest, distToEast), distToNorth), distToSouth))
-                side = WorldSides.North;
-
-            return side;
-        }
-        
         public void AddOcean(Vector2 point)
         {
-            var side = getSideOfWorld(point);
+            var side = WorldSide.getSideOfWorld(point);
             if (!oceans.Contains(side))
-            {                        
+            {
                 oceans.Add(side);
                 //// clear ocean bottom
-                terrainField.ChangeValue(new Vector4(oceanDepth * -1f, 0f, 0, 0f), getPartOfMap(side, oceanWidth));        
+                terrainField.ChangeValue(new Vector4(oceanDepth * -1f, 0f, 0, 0f), side.getPartOfMap(oceanWidth));
             }
         }
-        
+
         public void RemoveOcean(Vector2 point)
         {
-            var side = getSideOfWorld(point);
+            var side = WorldSide.getSideOfWorld(point);
             if (oceans.Contains(side))
-            {        
+            {
                 oceans.Remove(side);
-                terrainField.ChangeValue(new Vector4(oceanDepth, 0f, 0f, 0f), getPartOfMap(side, oceanWidth));             
+                terrainField.ChangeValue(new Vector4(oceanDepth, 0f, 0f, 0f), side.getPartOfMap(oceanWidth));
             }
         }
 

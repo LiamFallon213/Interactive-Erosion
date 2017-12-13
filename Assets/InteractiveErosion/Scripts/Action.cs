@@ -5,38 +5,7 @@ using System.Text;
 using UnityEngine;
 
 namespace InterativeErosionProject
-{
-    //public struct Ocean
-    //{
-    //    public float waterLevel, terrainLevel;        
-    //    public Ocean(float waterLevel, float terrainLevel)
-    //    {
-    //        this.waterLevel = waterLevel;
-    //        this.terrainLevel = terrainLevel;            
-    //    }
-    //}
-    public enum WorldSides
-    {
-        None = 0, West = 1, North = 2, East = 4, South = 8
-    }
-    public class Point
-    {
-        public int x, y;
-        public Point(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-        public override string ToString()
-        {
-            return "x = " + x + "; y = " + y;
-        }
-
-        internal Vector2 getVector2(int tetureSize)
-        {
-            return new Vector2(x / (float)tetureSize, y / (float)tetureSize);
-        }
-    }
+{       
     public class Action
     {
         private readonly string name;

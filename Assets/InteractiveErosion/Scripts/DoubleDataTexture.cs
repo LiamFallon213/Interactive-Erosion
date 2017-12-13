@@ -205,7 +205,7 @@ namespace InterativeErosionProject
             RTUtility.Blit(this.READ, this.WRITE, changeValueMat, rect, 0, false);
             this.Swap();
         }
-        public void ChangeValueZeroControl(float value, Rect rect)
+        public void ChangeValueZeroControl(float value)
         {
             //Graphics.Blit(this.READ, this.WRITE); // don't know why but need it
             changeValueZeroControlMat.SetFloat("_Value", value);
