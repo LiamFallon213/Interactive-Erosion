@@ -48,6 +48,8 @@ namespace InterativeErosionProject
         private float waterDrainageAmount = 0f;
         private float waterDrainageRadius = 0.008f;
 
+        
+
         [SerializeField]
         private int m_seed = 0;
 
@@ -438,7 +440,7 @@ namespace InterativeErosionProject
                 arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
                 arrowsMat.SetTexture("_Terrain", terrainField.READ);
                 arrowsMat.SetTexture("_Water", water.main.READ);
-                arrowsMat.SetTexture("_WaterVelocity", water.waterVelocity.READ);
+                arrowsMat.SetTexture("_WaterVelocity", water.velocity.READ);
                 arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
                 arrowsMat.SetFloat("_Width", 0.03f);
             }
@@ -462,7 +464,7 @@ namespace InterativeErosionProject
             }
 
             m_waterMat.SetTexture("_SedimentField", water.sedimentField.READ);
-            m_waterMat.SetTexture("_VelocityField", water.waterVelocity.READ);
+            m_waterMat.SetTexture("_VelocityField", water.velocity.READ);
             m_waterMat.SetFloat("_ScaleY", scaleY);
             m_waterMat.SetFloat("_TexSize", (float)TEX_SIZE);
             m_waterMat.SetTexture("_WaterField", water.main.READ);
@@ -875,14 +877,18 @@ namespace InterativeErosionProject
             //return getData4Float32bits(m_terrainField.READ, point);
             return terrainField.getDataRGBAFloatEF(point);
         }
-        internal Vector4 getSedimentInWater(Point selectedPoint)
+        internal Vector4 getSedimentInWater(Vector2 point)
         {
-            return water.sedimentField.getDataRFloatEF(selectedPoint);
+            return water.sedimentField.getDataRGBAFloatEF(point);
         }
-        internal Vector4 getWaterLevel(Point selectedPoint)
+        internal float getDeposition(Vector2 point)
+        {
+            return water.sedimentDeposition.getDataRGBAFloatEF(point).x;
+        }
+        internal float getWaterLevel(Vector2 point)
         {
 
-            return water.main.getDataRFloatEF(selectedPoint);
+            return water.main.getDataRGBAFloatEF(point).x;
 
             //Vector4 value = new Vector4(0f,1f,2,3f);
             //getValueMat.SetVector("_Coords", selectedPoint.getVector2(TEX_SIZE));
@@ -891,10 +897,14 @@ namespace InterativeErosionProject
 
             //return getValueMat.GetVector("_Output");
         }
-        //internal Vector4 getWaterVelocity(Point selectedPoint)
-        //{
-        //    return getDataRGBAFloatEF(m_waterVelocity.READ, selectedPoint);
-        //}
+        internal float getLavaLevel(Vector2 point)
+        {
+            return lava.main.getDataRGBAFloatEF(point).x;
+        }
+        internal Vector4 getWaterVelocity(Vector2 point)
+        {
+            return water.velocity.getDataRGBAFloatEF(point);            
+        }
 
         private bool simulateWaterFlow = false;
         public void SetSimulateWater(bool value)

@@ -25,7 +25,7 @@ namespace InterativeErosionProject
 
         public Layer(string name, int size, float viscosity, ErosionSim link)
         {
-            main = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point);
+            main = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point); // was RFloat
             main.ClearColor();
             outFlow = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBHalf, FilterMode.Point);
             outFlow.ClearColor();
@@ -77,16 +77,16 @@ namespace InterativeErosionProject
     {
         ///<summary> Water speed (2 channels). Used for sediment movement and dissolution</summary>
         [SerializeField]
-        public DoubleDataTexture waterVelocity;
+        public DoubleDataTexture velocity;
         public LayerWithVelocity(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link)
         {
-            waterVelocity = new DoubleDataTexture("Water Velocity", size, RenderTextureFormat.RGHalf, FilterMode.Bilinear);// was RGHalf
-            waterVelocity.ClearColor();
+            velocity = new DoubleDataTexture("Water Velocity", size, RenderTextureFormat.ARGBFloat, FilterMode.Bilinear);// was RGHalf
+            velocity.ClearColor();
         }
         public override void OnDestroy()
         {
             base.OnDestroy();
-            waterVelocity.Destroy();
+            velocity.Destroy();
         }
         /// <summary>
         ///  Calculates water velocity
@@ -99,7 +99,7 @@ namespace InterativeErosionProject
             link.m_waterVelocityMat.SetTexture("_WaterFieldOld", main.WRITE);
             link.m_waterVelocityMat.SetTexture("_OutFlowField", outFlow.READ);
 
-            Graphics.Blit(null, waterVelocity.READ, link.m_waterVelocityMat);
+            Graphics.Blit(null, velocity.READ, link.m_waterVelocityMat);
 
             const float viscosity = 10.5f;
             const int iterations = 2;
@@ -109,8 +109,8 @@ namespace InterativeErosionProject
 
             for (int i = 0; i < iterations; i++)
             {
-                Graphics.Blit(waterVelocity.READ, waterVelocity.WRITE, link.m_diffuseVelocityMat);
-                waterVelocity.Swap();
+                Graphics.Blit(velocity.READ, velocity.WRITE, link.m_diffuseVelocityMat);
+                velocity.Swap();
             }
         }
     }
@@ -154,11 +154,11 @@ namespace InterativeErosionProject
             //waterOutFlow = new DoubleDataTexture("Water outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);
 
 
-            sedimentField = new DoubleDataTexture("Sediment Field", size, RenderTextureFormat.RHalf, FilterMode.Bilinear);// was RHalf
+            sedimentField = new DoubleDataTexture("Sediment Field", size, RenderTextureFormat.ARGBFloat, FilterMode.Bilinear);// was RHalf
             sedimentField.ClearColor();
             advectSediment = new DoubleDataTexture("Sediment Advection", size, RenderTextureFormat.RHalf, FilterMode.Bilinear);// was RHalf
             advectSediment.ClearColor();
-            sedimentDeposition = new DoubleDataTexture("Sediment Deposition", size, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
+            sedimentDeposition = new DoubleDataTexture("Sediment Deposition", size, RenderTextureFormat.ARGBFloat, FilterMode.Point);// was RHalf
             sedimentDeposition.ClearColor();
 
             tiltAngle = DoubleDataTexture.Create("Tilt Angle", size, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
@@ -183,7 +183,7 @@ namespace InterativeErosionProject
 
             link.dissolutionAndDepositionMat.SetTexture("_TerrainField", terrainField.READ);
             link.dissolutionAndDepositionMat.SetTexture("_SedimentField", sedimentField.READ);
-            link.dissolutionAndDepositionMat.SetTexture("_VelocityField", waterVelocity.READ);
+            link.dissolutionAndDepositionMat.SetTexture("_VelocityField", velocity.READ);
             link.dissolutionAndDepositionMat.SetTexture("_WaterField", main.READ);
             link.dissolutionAndDepositionMat.SetTexture("_TiltAngle", tiltAngle);
             link.dissolutionAndDepositionMat.SetFloat("_MinTiltAngle", minTiltAngle);
@@ -228,7 +228,7 @@ namespace InterativeErosionProject
             link.m_advectSedimentMat.SetFloat("_TexSize", size);
             link.m_advectSedimentMat.SetFloat("T", TIME_STEP);
             link.m_advectSedimentMat.SetFloat("_VelocityFactor", 1.0f);
-            link.m_advectSedimentMat.SetTexture("_VelocityField", waterVelocity.READ);
+            link.m_advectSedimentMat.SetTexture("_VelocityField", velocity.READ);
 
             //is bug? No its no
             Graphics.Blit(sedimentField.READ, advectSediment.READ, link.m_advectSedimentMat);
@@ -238,7 +238,7 @@ namespace InterativeErosionProject
 
             link.m_processMacCormackMat.SetFloat("_TexSize", size);
             link.m_processMacCormackMat.SetFloat("T", TIME_STEP);
-            link.m_processMacCormackMat.SetTexture("_VelocityField", waterVelocity.READ);
+            link.m_processMacCormackMat.SetTexture("_VelocityField", velocity.READ);
             link.m_processMacCormackMat.SetTexture("_InterField1", advectSediment.READ);
             link.m_processMacCormackMat.SetTexture("_InterField2", advectSediment.WRITE);
 

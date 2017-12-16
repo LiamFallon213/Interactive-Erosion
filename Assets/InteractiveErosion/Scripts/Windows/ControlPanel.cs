@@ -30,7 +30,7 @@ namespace InterativeErosionProject
         private Plane referencePlane = new Plane(Vector3.up, Vector3.zero);
 
         static public Vector2 selectedPoint;
-        static public Action selectedAction = Action.Nothing;
+        static public Action selectedAction = Action.Info;
         internal static MaterialsForEditing selectedMaterial = MaterialsForEditing.stone;
         private Vector3 lastClick;
 
