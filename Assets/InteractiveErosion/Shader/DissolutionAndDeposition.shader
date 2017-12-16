@@ -1,5 +1,5 @@
 
-Shader "Erosion/ErosionAndDeposition"
+Shader "Erosion/DissolutionAndDeposition"
 {
 	//UNITY_SHADER_NO_UPGRADE
 	Properties

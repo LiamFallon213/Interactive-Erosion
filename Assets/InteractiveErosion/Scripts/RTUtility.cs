@@ -43,7 +43,8 @@ namespace InterativeErosionProject
 
             Graphics.SetRenderTarget(des);
 
-            if (clear) GL.Clear(true, true, Color.clear);
+            if (clear)
+                GL.Clear(true, true, Color.clear);
 
             GL.PushMatrix();
             GL.LoadOrtho();
@@ -51,10 +52,19 @@ namespace InterativeErosionProject
             mat.SetPass(pass);
 
             GL.Begin(GL.QUADS);
-            GL.TexCoord2(rect.x, rect.y); GL.Vertex3(rect.x, rect.y, 0.1f);
-            GL.TexCoord2(rect.x + rect.width, rect.y); GL.Vertex3(rect.x + rect.width, rect.y, 0.1f);
-            GL.TexCoord2(rect.x + rect.width, rect.y + rect.height); GL.Vertex3(rect.x + rect.width, rect.y + rect.height, 0.1f);
-            GL.TexCoord2(rect.x, rect.y + rect.height); GL.Vertex3(rect.x, rect.y + rect.height, 0.1f);
+            
+            GL.TexCoord2(rect.x, rect.y);
+            GL.Vertex3(rect.x, rect.y, 0.1f);
+
+            GL.TexCoord2(rect.x + rect.width, rect.y);
+            GL.Vertex3(rect.x + rect.width, rect.y, 0.1f);
+
+            GL.TexCoord2(rect.x + rect.width, rect.y + rect.height);
+            GL.Vertex3(rect.x + rect.width, rect.y + rect.height, 0.1f);
+
+            GL.TexCoord2(rect.x, rect.y + rect.height);
+            GL.Vertex3(rect.x, rect.y + rect.height, 0.1f);
+
             GL.End();
 
             GL.PopMatrix();
@@ -181,7 +191,7 @@ namespace InterativeErosionProject
             changeFormatTexture.SetPixels(tex.GetPixels());
             changeFormatTexture.Apply();
 
-            var res = DataTexture.Create("Loaded", tex.width, RenderTextureFormat.ARGBFloat, FilterMode.Point);// was RHalf
+            var res = DoubleDataTexture.Create("Loaded", tex.width, RenderTextureFormat.ARGBFloat, FilterMode.Point);// was RHalf
 
             Graphics.CopyTexture(changeFormatTexture, 0, 0, res, 0, 0);
             GameObject.Destroy(tex);

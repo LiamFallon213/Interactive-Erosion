@@ -7,286 +7,267 @@ using UnityEngine;
 namespace InterativeErosionProject
 {
     /// <summary>
-    /// Encapsulates operations with 1 data matrix (has 2 textures for write-read operations)
+    /// Represents 1 layer
     /// </summary>
-    /// 
     [System.Serializable]
-    public class DataTexture
+    public class Layer
     {
-        static private readonly List<DataTexture> all = new List<DataTexture>();
-        static private readonly RenderTexture tempRTARGB, tempRTRFloat;
-        static private Texture2D tempT2DRGBA, tempT2DRFloat;
-        static private Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat,
-            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat, moveByVelocityMat,
-            scaleMat;
-        ///<summary> Contains data</summary>
+        ///<summary>r - height; g, b - velocity; a - temperature. Can't be negative!!</summary>           
+        [SerializeField]//readonly
+        public DoubleDataTexture main;
 
         [SerializeField]//readonly
-        private RenderTexture[] textures = new RenderTexture[2];
+        public DoubleDataTexture outFlow;
 
-        private readonly int size;
-        public RenderTexture READ
+        private float viscosity;
+        protected readonly ErosionSim link;
+        protected float size;
+
+        public Layer(string name, int size, float viscosity, ErosionSim link)
         {
-            get { return textures[0]; }
-        }
-        public RenderTexture WRITE
-        {
-            get { return textures[1]; }
-        }
-        static DataTexture()
-        {
-            tempRTARGB = DataTexture.Create("tempRTARGB", 1, RenderTextureFormat.ARGBFloat, FilterMode.Point);
-
-            tempT2DRGBA = new Texture2D(1, 1, TextureFormat.RGBAFloat, false);
-            tempT2DRGBA.wrapMode = TextureWrapMode.Clamp;
-            tempT2DRGBA.filterMode = FilterMode.Point;
-
-            tempRTRFloat = DataTexture.Create("tempRTRFloat", 1, RenderTextureFormat.RFloat, FilterMode.Point);
-
-            tempT2DRFloat = new Texture2D(1, 1, TextureFormat.RFloat, false);
-            tempT2DRFloat.wrapMode = TextureWrapMode.Clamp;
-            tempT2DRFloat.filterMode = FilterMode.Point;
-            LoadMaterials();
-        }
-
-        public DataTexture(string name, int size, RenderTextureFormat format, FilterMode filterMode)
-        {
-
-            for (int i = 0; i < 2; i++)
-            {
-                textures[i] = new RenderTexture(size, size, 0, format);
-                textures[i].wrapMode = TextureWrapMode.Clamp;
-                textures[i].filterMode = filterMode;
-                textures[i].name = name + " " + i;
-                textures[i].enableRandomWrite = true;
-            }
+            main = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point);
+            main.ClearColor();
+            outFlow = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBHalf, FilterMode.Point);
+            outFlow.ClearColor();
+            this.viscosity = viscosity;
+            this.link = link;
             this.size = size;
-            all.Add(this);
         }
-        static private void LoadMaterials()
+        /// <summary>
+        ///  Calculates flow of field 
+        /// </summary>
+        public void Flow(RenderTexture onWhat)
         {
-            string path = "Materials/UniversalCS/";
-            setFloatValueMat = Resources.Load(path+"SetFloatValue", typeof(Material)) as Material;
-            changeValueMat = Resources.Load(path + "ChangeValue", typeof(Material)) as Material;
-            changeValueZeroControlMat = Resources.Load(path + "ChangeValueZeroControl", typeof(Material)) as Material;
-            getValueMat = Resources.Load(path + "GetValue", typeof(Material)) as Material;
-            changeValueGaussMat = Resources.Load(path + "ChangeValueGauss", typeof(Material)) as Material;
-            changeValueGaussZeroControlMat = Resources.Load(path + "ChangeValueGaussZeroControl", typeof(Material)) as Material;
-            setRandomValueMat = Resources.Load(path + "SetRandomValue", typeof(Material)) as Material;
-            moveByVelocityMat = Resources.Load(path + "MoveByVelocity", typeof(Material)) as Material;
-            scaleMat = Resources.Load(path + "Scale", typeof(Material)) as Material;
+            //main.SetFilterMode(FilterMode.Point);
+            link.m_outFlowMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
+            link.m_outFlowMat.SetFloat("T", 0.1f);
+            link.m_outFlowMat.SetFloat("L", 1.0f);
+            link.m_outFlowMat.SetFloat("A", 1.0f);
+            link.m_outFlowMat.SetFloat("G", ErosionSim.GRAVITY);
+            link.m_outFlowMat.SetFloat("_Layers", 4);
+            link.m_outFlowMat.SetFloat("_Damping", viscosity);
+            link.m_outFlowMat.SetTexture("_TerrainField", onWhat);
+            link.m_outFlowMat.SetTexture("_Field", main.READ);
+
+            Graphics.Blit(outFlow.READ, outFlow.WRITE, link.m_outFlowMat);
+
+            outFlow.Swap(); ;
+
+            link.m_fieldUpdateMat.SetFloat("_TexSize", size);
+            link.m_fieldUpdateMat.SetFloat("T", 0.1f);
+            link.m_fieldUpdateMat.SetFloat("L", 1f);
+            link.m_fieldUpdateMat.SetTexture("_OutFlowField", outFlow.READ);
+
+            Graphics.Blit(main.READ, main.WRITE, link.m_fieldUpdateMat);
+            main.Swap();
+            //main.SetFilterMode(FilterMode.Bilinear);
         }
-        public static void DestroyAll()
+        virtual public void OnDestroy()
         {
-            foreach (var item in all)
+            main.Destroy();
+            outFlow.Destroy();
+        }
+        virtual public void SetFilterMode(FilterMode mode)
+        {
+            main.SetFilterMode(mode);
+        }
+    }
+    [System.Serializable]
+    public class LayerWithVelocity : Layer
+    {
+        ///<summary> Water speed (2 channels). Used for sediment movement and dissolution</summary>
+        [SerializeField]
+        public DoubleDataTexture waterVelocity;
+        public LayerWithVelocity(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link)
+        {
+            waterVelocity = new DoubleDataTexture("Water Velocity", size, RenderTextureFormat.RGHalf, FilterMode.Bilinear);// was RGHalf
+            waterVelocity.ClearColor();
+        }
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            waterVelocity.Destroy();
+        }
+        /// <summary>
+        ///  Calculates water velocity
+        /// </summary>
+        public void CalcWaterVelocity(float TIME_STEP)
+        {
+            link.m_waterVelocityMat.SetFloat("_TexSize", size);
+            link.m_waterVelocityMat.SetFloat("L", 1f);
+            link.m_waterVelocityMat.SetTexture("_WaterField", main.READ);
+            link.m_waterVelocityMat.SetTexture("_WaterFieldOld", main.WRITE);
+            link.m_waterVelocityMat.SetTexture("_OutFlowField", outFlow.READ);
+
+            Graphics.Blit(null, waterVelocity.READ, link.m_waterVelocityMat);
+
+            const float viscosity = 10.5f;
+            const int iterations = 2;
+
+            link.m_diffuseVelocityMat.SetFloat("_TexSize", size);
+            link.m_diffuseVelocityMat.SetFloat("_Alpha", 1f / (viscosity * TIME_STEP));// CELL_AREA == 1f
+
+            for (int i = 0; i < iterations; i++)
             {
-                item.Destroy();
+                Graphics.Blit(waterVelocity.READ, waterVelocity.WRITE, link.m_diffuseVelocityMat);
+                waterVelocity.Swap();
             }
-            all.Clear();
         }
-        //public static DataTexture CreateDouble(string name, int size, RenderTextureFormat format, FilterMode filterMode)
+    }
+    [System.Serializable]
+    public class LayerWithErosion : LayerWithVelocity
+    {
+        [SerializeField]
+        ///<summary></summary>        
+        private DoubleDataTexture advectSediment;
+
+        [SerializeField]
+        ///<summary> Actual amount of dissolved sediment in water</summary>
+        public DoubleDataTexture sedimentField;
+
+        [SerializeField]
+        ///<summary> Actual amount of dissolved sediment in water</summary>
+        public DoubleDataTexture sedimentDeposition;
+
+        ///<summary> Contains surface angels for each point. Used in water erosion only (Why?)</summary>
+        [SerializeField]
+        private RenderTexture tiltAngle;
+
+        //[SerializeField]
+        //private RenderTexture sedimentOutFlow;
+
+        /// <summary> Rate the sediment is deposited on top layer </summary>
+        [SerializeField]
+        private float depositionConstant = 0.015f;
+
+        /// <summary> Terrain wouldn't dissolve if water level in cell is lower than this</summary>
+        [SerializeField]        
+        private float dissolveLimit = 0.001f;
+
+        /// <summary> How much sediment the water can carry per 1 unit of water </summary>
+        [SerializeField]
+        private float sedimentCapacity = 0.2f;
+
+        public LayerWithErosion(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link)
+        {
+            //waterField = new DoubleDataTexture("Water Field", TEX_SIZE, RenderTextureFormat.RFloat, FilterMode.Point);
+            //waterOutFlow = new DoubleDataTexture("Water outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);
+
+
+            sedimentField = new DoubleDataTexture("Sediment Field", size, RenderTextureFormat.RHalf, FilterMode.Bilinear);// was RHalf
+            sedimentField.ClearColor();
+            advectSediment = new DoubleDataTexture("Sediment Advection", size, RenderTextureFormat.RHalf, FilterMode.Bilinear);// was RHalf
+            advectSediment.ClearColor();
+            sedimentDeposition = new DoubleDataTexture("Sediment Deposition", size, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
+            sedimentDeposition.ClearColor();
+
+            tiltAngle = DoubleDataTexture.Create("Tilt Angle", size, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
+
+            //sedimentOutFlow = DoubleDataTexture.Create("sedimentOutFlow", size, RenderTextureFormat.ARGBHalf, FilterMode.Point);// was ARGBHalf
+            //sedimentOutFlow.ClearColor();
+        }
+        /// <summary>
+        ///  Calculates how much ground should go in sediment flow aka force-based erosion
+        ///  Transfers m_terrainField to m_sedimentField basing on
+        ///  m_waterVelocity, m_sedimentCapacity, m_dissolvingConstant,
+        ///  m_depositionConstant, m_tiltAngle, m_minTiltAngle
+        /// Also calculates m_tiltAngle
+        /// </summary>
+        private void DissolveAndDeposition(DoubleDataTexture terrainField, Vector4 dissolvingConstant, float minTiltAngle, int TERRAIN_LAYERS)
+        {
+            link.m_tiltAngleMat.SetFloat("_TexSize", size);
+            link.m_tiltAngleMat.SetFloat("_Layers", TERRAIN_LAYERS);
+            link.m_tiltAngleMat.SetTexture("_TerrainField", terrainField.READ);
+
+            Graphics.Blit(null, tiltAngle, link.m_tiltAngleMat);
+
+            link.dissolutionAndDepositionMat.SetTexture("_TerrainField", terrainField.READ);
+            link.dissolutionAndDepositionMat.SetTexture("_SedimentField", sedimentField.READ);
+            link.dissolutionAndDepositionMat.SetTexture("_VelocityField", waterVelocity.READ);
+            link.dissolutionAndDepositionMat.SetTexture("_WaterField", main.READ);
+            link.dissolutionAndDepositionMat.SetTexture("_TiltAngle", tiltAngle);
+            link.dissolutionAndDepositionMat.SetFloat("_MinTiltAngle", minTiltAngle);
+            link.dissolutionAndDepositionMat.SetFloat("_SedimentCapacity", sedimentCapacity);
+            link.dissolutionAndDepositionMat.SetVector("_DissolvingConstant", dissolvingConstant);
+            link.dissolutionAndDepositionMat.SetFloat("_DepositionConstant", depositionConstant);
+            link.dissolutionAndDepositionMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
+            link.dissolutionAndDepositionMat.SetFloat("_DissolveLimit", dissolveLimit); //nash added it            
+
+            RenderTexture[] terrainAndSediment = new RenderTexture[3] { terrainField.WRITE, sedimentField.WRITE, sedimentDeposition.WRITE };
+
+            RTUtility.MultiTargetBlit(terrainAndSediment, link.dissolutionAndDepositionMat);
+            terrainField.Swap();
+            sedimentField.Swap();
+            sedimentDeposition.Swap();
+        }
+        ///// <summary>
+        /////  Moves sediment 
+        ///// </summary>
+        //private void AlternativeAdvectSediment()
         //{
-        //    //RenderTexture[] res = new RenderTexture[2];
-        //    //for (int i = 0; i < 2; i++)
-        //    //{
-        //    //    res[i] = new RenderTexture(size, size, 0, format);
-        //    //    res[i].wrapMode = TextureWrapMode.Clamp;
-        //    //    res[i].filterMode = filterMode;
-        //    //    res[i].name = name + " " + i;
-        //    //}
-        //    //return res;
-        //    return new DataTexture( name,  size,  format,  filterMode);
+        //    moveByLiquidMat.SetFloat("T", TIME_STEP);
+        //    moveByLiquidMat.SetTexture("_OutFlow", outFlow.READ);
+        //    moveByLiquidMat.SetTexture("_LuquidLevel", main.READ);
+
+        //    Graphics.Blit(sedimentField.READ, sedimentOutFlow, moveByLiquidMat);
+
+        //    m_fieldUpdateMat.SetFloat("_TexSize", (float)TEX_SIZE);
+        //    m_fieldUpdateMat.SetFloat("T", TIME_STEP);
+        //    m_fieldUpdateMat.SetFloat("L", PIPE_LENGTH);
+        //    m_fieldUpdateMat.SetTexture("_OutFlowField", sedimentOutFlow);
+
+        //    Graphics.Blit(sedimentField.READ, sedimentField.WRITE, m_fieldUpdateMat);
+        //    sedimentField.Swap();
+
         //}
-        public static RenderTexture Create(string name, int size, RenderTextureFormat format, FilterMode filterMode)
+        /// <summary>
+        ///  Moves sediment 
+        /// </summary>
+        private void AdvectSediment(float TIME_STEP)
         {
-            var res = new RenderTexture(size, size, 0, format);
-            res.wrapMode = TextureWrapMode.Clamp;
-            res.filterMode = filterMode;
-            res.name = name;
-            res.Create();
+            link.m_advectSedimentMat.SetFloat("_TexSize", size);
+            link.m_advectSedimentMat.SetFloat("T", TIME_STEP);
+            link.m_advectSedimentMat.SetFloat("_VelocityFactor", 1.0f);
+            link.m_advectSedimentMat.SetTexture("_VelocityField", waterVelocity.READ);
 
-            return res;
-        }
-        public void Destroy()
-        {
-            UnityEngine.Object.Destroy(textures[0]);
-            UnityEngine.Object.Destroy(textures[1]);
-        }
-        public int getMaxIndex()
-        {
-            return size - 1;
-        }
-        public Vector4 getDataRGBAFloatEF(Vector2 point)
-        {
-            Graphics.CopyTexture(this.READ, 0, 0, (int)(point.x * getMaxIndex()), (int)(point.y * getMaxIndex()), 1, 1, tempRTARGB, 0, 0, 0, 0);
-            tempT2DRGBA = GetRTPixels(tempRTARGB, tempT2DRGBA);
-            var res = tempT2DRGBA.GetPixel(0, 0);
-            return res;
-        }
-        public Vector4 getDataRFloatEF(Point point)
-        {
-            Graphics.CopyTexture(this.READ, 0, 0, point.x, point.y, 1, 1, tempT2DRFloat, 0, 0, 0, 0);
-            var del = new RenderTexture(1, 1, 0, RenderTextureFormat.ARGBHalf);
-            del.wrapMode = TextureWrapMode.Clamp;
-            del.filterMode = FilterMode.Point;
-            del.Create();
-            Graphics.ConvertTexture(tempRTRFloat, del);
+            //is bug? No its no
+            Graphics.Blit(sedimentField.READ, advectSediment.READ, link.m_advectSedimentMat);
 
-            tempT2DRGBA = GetRTPixels(tempRTARGB, tempT2DRGBA);
-            var res = tempT2DRGBA.GetPixel(0, 0);
-            //tempT2DRFloat = GetRTPixels(tempRTRFloat, tempT2DRFloat);
-            //var res = tempT2DRFloat.GetPixel(0, 0);
-            return res;
+            link.m_advectSedimentMat.SetFloat("_VelocityFactor", -1.0f);
+            Graphics.Blit(advectSediment.READ, advectSediment.WRITE, link.m_advectSedimentMat);
+
+            link.m_processMacCormackMat.SetFloat("_TexSize", size);
+            link.m_processMacCormackMat.SetFloat("T", TIME_STEP);
+            link.m_processMacCormackMat.SetTexture("_VelocityField", waterVelocity.READ);
+            link.m_processMacCormackMat.SetTexture("_InterField1", advectSediment.READ);
+            link.m_processMacCormackMat.SetTexture("_InterField2", advectSediment.WRITE);
+
+            Graphics.Blit(sedimentField.READ, sedimentField.WRITE, link.m_processMacCormackMat);
+            sedimentField.Swap();
+        }
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            advectSediment.Destroy();
+            sedimentField.Destroy();
+            sedimentDeposition.Destroy();
+            //sedimentOutFlow.Destroy();
+            GameObject.Destroy(tiltAngle);
         }
 
-
-        /// Not supported by unity
-        //public float getDataRGHalf(RenderTexture source, Point point)
-        //{
-        //    bufferRGHalfTexture = GetRTPixels(source, bufferRGHalfTexture);
-        //    var res = bufferRGHalfTexture.GetPixel(point.x, point.y);
-        //    return res.a;
-        //}
-        // Get the contents of a RenderTexture into a Texture2D
-        static public Texture2D GetRTPixels(RenderTexture source, Texture2D destination)
+        internal void SimulateErosion(DoubleDataTexture terrainField, Vector4 dissolvingConstant, float minTiltAngle, int TERRAIN_LAYERS, float TIME_STEP)
         {
-            // Remember currently active render texture
-            RenderTexture currentActiveRT = RenderTexture.active;
-
-            // Set the supplied RenderTexture as the active one
-            RenderTexture.active = source;
-
-            // Create a new Texture2D and read the RenderTexture image into it
-            //Texture2D tex = new Texture2D(source.width, source.height);
-            destination.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0);
-
-            // Restore previously active render texture
-            RenderTexture.active = currentActiveRT;
-            return destination;
+            DissolveAndDeposition(terrainField, dissolvingConstant, minTiltAngle, TERRAIN_LAYERS);
+            AdvectSediment( TIME_STEP);
+            //AlternativeAdvectSediment();
         }
-        public void SetValue(Vector4 value, Rect rect)
+        public void SetSedimentDepositionRate(float value)
         {
-            //Graphics.Blit(field.READ, field.WRITE);
-            setFloatValueMat.SetVector("_Value", value);
-            RTUtility.Blit(this.READ, this.WRITE, setFloatValueMat, rect, 0, false);
-            this.Swap();
+            depositionConstant = value;
         }
-        public void ChangeValueGauss(Vector2 point, float radius, float amount, Vector4 layerMask)
+        public void SetSedimentCapacity(float value)
         {
-            if (amount != 0f)
-            {
-                changeValueGaussMat.SetVector("_Point", point);
-                changeValueGaussMat.SetFloat("_Radius", radius);
-                changeValueGaussMat.SetFloat("_Amount", amount);
-                changeValueGaussMat.SetVector("_LayerMask", layerMask);
-
-                Graphics.Blit(this.READ, this.WRITE, changeValueGaussMat);
-                this.Swap();
-            }
-        }
-
-        public void ChangeValueGaussZeroControl(Vector2 point, float radius, float amount, Vector4 layerMask)
-        {
-            if (amount != 0f)
-            {
-                changeValueGaussZeroControlMat.SetVector("_Point", point);
-                changeValueGaussZeroControlMat.SetFloat("_Radius", radius);
-                changeValueGaussZeroControlMat.SetFloat("_Amount", amount);
-                changeValueGaussZeroControlMat.SetVector("_LayerMask", layerMask);
-
-                Graphics.Blit(this.READ, this.WRITE, changeValueGaussZeroControlMat);
-                this.Swap();
-            }
-        }
-        public void ChangeValue(Vector4 value, Rect rect)
-        {
-            //Graphics.Blit(field.READ, field.WRITE); // don't know why but need it
-            changeValueMat.SetVector("_Value", value);
-            RTUtility.Blit(this.READ, this.WRITE, changeValueMat, rect, 0, false);
-            this.Swap();
-        }
-        public void ChangeValueZeroControl(float value, Rect rect)
-        {
-            changeValueZeroControlMat.SetFloat("_Value", value);
-            Graphics.Blit(this.READ, this.WRITE, changeValueZeroControlMat);
-            this.Swap();
-        }
-
-        internal void Swap()
-        {
-            RenderTexture temp = textures[0];
-            textures[0] = textures[1];
-            textures[1] = temp;
-        }
-
-        internal void ClearColor()
-        {
-            //if (texture == null) return;
-            //if (!SystemInfo.SupportsRenderTextureFormat(texture.format)) return;
-
-            //Graphics.SetRenderTarget(texture);
-            //GL.Clear(false, true, Color.clear);
-            for (int i = 0; i < textures.Length; i++)
-            {
-                if (textures[i] == null) continue;
-                if (!SystemInfo.SupportsRenderTextureFormat(textures[i].format)) continue;
-
-                Graphics.SetRenderTarget(textures[i]);
-                GL.Clear(false, true, Color.clear);
-            }
-        }
-        public void SetFilterMode(FilterMode mode)
-        {
-            for (int i = 0; i < textures.Length; i++)
-            {
-                textures[i].filterMode = mode;
-            }
-        }
-
-        internal void SetRandomValue(Vector4 limits, int chance)
-        {
-            setRandomValueMat.SetVector("_Limits", limits);
-            setRandomValueMat.SetInt("_Chance", chance);
-            Graphics.Blit(this.READ, this.WRITE, setRandomValueMat);
-            this.Swap();
-        }
-
-        internal void Set(RenderTexture tex)
-        {
-            textures[0] = tex;
-        }
-
-        internal void MoveByVelocity(RenderTexture velocity, float T, float coefficient, float limit, ComputeShader shader)
-        {
-            // how it should be:
-            // move value by 1 cell, not every but at random tick
-            // movement rate is proportional to speed of plate
-            //int kernelHandle = shader.FindKernel("CSMain");            
-
-            //shader.SetTexture(kernelHandle, "_MainTex", this.READ);
-            //shader.SetTexture(kernelHandle, "_Velocity", velocity);
-
-            //shader.SetFloat("T", T);
-            //shader.SetFloat("_Coefficient", coefficient);
-            //shader.SetFloat("_TexSize", (float)size);
-            //shader.SetFloat("_Limit", limit);
-            //shader.Dispatch(kernelHandle, this.size / 8, this.size / 8, 1);
-
-            ///this.Swap();
-            moveByVelocityMat.SetFloat("T", T);
-            moveByVelocityMat.SetFloat("_Coefficient", coefficient);
-            moveByVelocityMat.SetFloat("_TexSize", (float)size);
-            moveByVelocityMat.SetFloat("_Limit", limit);
-            moveByVelocityMat.SetTexture("_Velocity", velocity);
-            Graphics.Blit(this.READ, this.WRITE, moveByVelocityMat);
-            this.Swap();
-        }
-
-        internal void Scale(float value)
-        {
-            scaleMat.SetFloat("_Value", value);
-            Graphics.Blit(this.READ, this.WRITE, scaleMat);
-            this.Swap();
+            sedimentCapacity = value;
         }
     }
 }

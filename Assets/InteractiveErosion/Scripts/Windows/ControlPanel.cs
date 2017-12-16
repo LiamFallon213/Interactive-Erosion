@@ -10,8 +10,13 @@ using UnityEngine.UI;
 
 namespace InterativeErosionProject
 {
-
-
+    public enum MaterialsForEditing
+    {
+        stone,
+        cobble, clay, sand,
+        water, watersource, waterdrain, sediment
+        , ocean, lavatest
+    }
     public class ControlPanel : Window
     {
         public Text text;
@@ -25,8 +30,8 @@ namespace InterativeErosionProject
         private Plane referencePlane = new Plane(Vector3.up, Vector3.zero);
 
         static public Vector2 selectedPoint;
-        static public Action selectedAction = Action.Info;
-        internal static MaterialsForEditing selectedMaterial;
+        static public Action selectedAction = Action.Nothing;
+        internal static MaterialsForEditing selectedMaterial = MaterialsForEditing.stone;
         private Vector3 lastClick;
 
         public override void Refresh()
@@ -76,6 +81,8 @@ namespace InterativeErosionProject
                                 sim.AddOcean(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.sediment)
                                 sim.AddSediment(selectedPoint);
+                            else if (selectedMaterial == MaterialsForEditing.lavatest)
+                                sim.AddLava(selectedPoint);
                             else //rest of materials
                                 sim.AddToTerrainLayer(selectedMaterial, selectedPoint);
                         }
@@ -223,4 +230,5 @@ namespace InterativeErosionProject
             return 1;
         }
     }
+
 }
