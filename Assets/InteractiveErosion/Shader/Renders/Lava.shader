@@ -10,7 +10,7 @@ Shader "Erosion/Lava"
 	}
 		SubShader
 	{
-		Tags{ "Queue" = "Geometry" "IgnoreProjector" = "True" "RenderType" = "Transparent" } 
+		Tags{ "Queue" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" } 
 		LOD 200
 
 		GrabPass{ "_GrabTex" }
