@@ -43,6 +43,7 @@ namespace InterativeErosionProject
             var waterVelocity=sim.getWaterVelocity(ControlPanel.selectedPoint);
             sb.Append("\nWater velocity: ").Append(waterVelocity);
             sb.Append("\nWater speed: ").Append(waterVelocity.magnitude);
+            sb.Append("\nWater flow: ").Append(sim.getWaterFlow(ControlPanel.selectedPoint));
 
             sb.Append("\nTerrain deposition(+)/dissolution(-): ").Append(sim.getDeposition(ControlPanel.selectedPoint));
 

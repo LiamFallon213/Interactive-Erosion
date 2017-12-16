@@ -27,7 +27,7 @@ namespace InterativeErosionProject
         {
             main = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point); // was RFloat
             main.ClearColor();
-            outFlow = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBHalf, FilterMode.Point);
+            outFlow = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point); //was ARGBHalf
             outFlow.ClearColor();
             this.viscosity = viscosity;
             this.link = link;

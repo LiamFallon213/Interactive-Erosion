@@ -48,7 +48,7 @@ namespace InterativeErosionProject
         private float waterDrainageAmount = 0f;
         private float waterDrainageRadius = 0.008f;
 
-        
+
 
         [SerializeField]
         private int m_seed = 0;
@@ -328,11 +328,7 @@ namespace InterativeErosionProject
 
             if (simulateWaterFlow)
             {
-                /// Evaporate water everywhere 
-                if (evaporationConstant > 0.0f)
-                {
-                    water.main.ChangeValueZeroControl(evaporationConstant * -1f);
-                }
+                // add rain
                 if (rainInputAmount > 0.0f)
                 {
                     water.main.ChangeValue(new Vector4(rainInputAmount, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
@@ -378,8 +374,17 @@ namespace InterativeErosionProject
             lava.SetFilterMode(FilterMode.Point);
             lava.Flow(terrainField.READ);
             lava.SetFilterMode(FilterMode.Bilinear);
-            terrainField.SetFilterMode(FilterMode.Bilinear);
 
+            if (simulateWaterFlow)
+            {
+                /// Evaporate water everywhere 
+                if (evaporationConstant > 0.0f)
+                {
+                    water.main.ChangeValueZeroControl(evaporationConstant * -1f);
+                }
+            }
+
+            terrainField.SetFilterMode(FilterMode.Bilinear);
             water.SetFilterMode(FilterMode.Bilinear);
 
             //sedimentDeposition.SetFilterMode(FilterMode.Bilinear);
@@ -877,6 +882,11 @@ namespace InterativeErosionProject
             //return getData4Float32bits(m_terrainField.READ, point);
             return terrainField.getDataRGBAFloatEF(point);
         }
+        
+        internal Vector4 getWaterFlow(Vector2 point)
+        {
+            return water.outFlow.getDataRGBAFloatEF(point);
+        }
         internal Vector4 getSedimentInWater(Vector2 point)
         {
             return water.sedimentField.getDataRGBAFloatEF(point);
@@ -901,9 +911,9 @@ namespace InterativeErosionProject
         {
             return lava.main.getDataRGBAFloatEF(point).x;
         }
-        internal Vector4 getWaterVelocity(Vector2 point)
+        internal Vector2 getWaterVelocity(Vector2 point)
         {
-            return water.velocity.getDataRGBAFloatEF(point);            
+            return water.velocity.getDataRGBAFloatEF(point);
         }
 
         private bool simulateWaterFlow = false;
