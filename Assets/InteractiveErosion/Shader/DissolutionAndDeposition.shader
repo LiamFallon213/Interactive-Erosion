@@ -61,8 +61,8 @@ Shader "Erosion/DissolutionAndDeposition"
 
 				float velocity = length(tex2D(_VelocityField, IN.uv).xy);
 
-				//float sedimentCapacityFactor = _SedimentCapacity * tiltAngle * velocity;
-				float sedimentCapacityFactor  =  _SedimentCapacity * velocity;
+				float sedimentCapacityFactor = _SedimentCapacity * tiltAngle * velocity;
+				//float sedimentCapacityFactor  =  _SedimentCapacity * velocity;
 
 				float4 finalMaxSediment;
 				finalMaxSediment.x = sedimentCapacityFactor;
