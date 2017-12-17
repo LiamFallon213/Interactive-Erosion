@@ -2,47 +2,57 @@
 using UnityEngine.EventSystems;
 using System.Collections;
 using System;
-
+/// <summary>
+/// Newest version of the class. 
+/// </summary>
 public class ToolTipHandler : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    private Func<string> dynamicString;
-    public string tooltip;
-    public MainTooltip tip;
+    [SerializeField]
+    private Func<string> dynamicText;
+    [SerializeField]
+    private string text;
+    [SerializeField]
+    private bool isDynamic;
+    //[SerializeField]
+    protected MainTooltip tooltipHolder;
+    private bool inside;
+    [SerializeField]
+    private bool useDynamicUpdate;
 
-    //int counter = 0;
-
-
+   
+    protected void Start()
+    {
+        tooltipHolder = MainTooltip.get();
+    }
     public void setDynamicString(Func<string> dynamicString)
     {
-        this.dynamicString = dynamicString;
-        //if (dynamicString != null && tip != null)
-        //{
-        //    //tip.HideTooltip();
-        //    //tip.SetTooltip(dynamicString());
-        //    tip.redrawDynamicString(dynamicString());
-        //    //OnPointerExit(null);
-        //    //OnPointerEnter(null);
-        //}
+        this.dynamicText = dynamicString;
+        isDynamic = true;
     }
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (tooltip != "" || dynamicString != null)
+        if (text != "" || dynamicText != null)
         {
-            if (dynamicString == null)
-                tip.SetTooltip(tooltip);
+            if (dynamicText == null)
+                tooltipHolder.SetTooltip(text);
             else
-                tip.SetTooltip(dynamicString());
+                tooltipHolder.SetTooltip(dynamicText());
+            inside = true;
         }
     }
-
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (tip != null)
-            tip.HideTooltip();
+        if (tooltipHolder != null)
+            tooltipHolder.HideTooltip();
+        inside = false;
     }
-    public void OnMouseOver()
+    public bool isInside()
     {
-        if (dynamicString != null && tip != null)
-            tip.SetTooltip(dynamicString());
+        return inside;
+    }
+    private void Update()
+    {
+        if (isInside() && useDynamicUpdate)
+            OnPointerEnter(null);
     }
 }
