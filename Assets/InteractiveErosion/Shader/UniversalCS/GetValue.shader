@@ -19,7 +19,7 @@ Shader "Erosion/GetValue"
 			#pragma fragment frag
 
 			uniform sampler2D _InputTexture;
-			extern float4 _Output;
+			uniform float4 _Output;
 			uniform float2 _Coords;
 
 			struct v2f

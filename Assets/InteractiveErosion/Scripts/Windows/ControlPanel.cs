@@ -1,9 +1,12 @@
-﻿using System;
+﻿using SFB;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using UnityEditor;
+#if !UNITY_WEBGL
+//using UnityEditor.Uti;
+#endif
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -30,7 +33,7 @@ namespace InterativeErosionProject
         private Plane referencePlane = new Plane(Vector3.up, Vector3.zero);
 
         static public Vector2 selectedPoint;
-        static public Action selectedAction = Action.Nothing;
+        static public Action selectedAction = Action.Info;
         internal static MaterialsForEditing selectedMaterial = MaterialsForEditing.stone;
         private Vector3 lastClick;
 
@@ -186,25 +189,36 @@ namespace InterativeErosionProject
         }
         public void onLoadPlates()
         {
-            var selected = EditorUtility.OpenFilePanelWithFilters("Select terrain texture", "", new string[] { "Image files", "png,jpg,jpeg" });//*.png;*.jpg;*.jpeg
-            if (selected != "")
+            // Open file with filter
+            var extensions = new[] {
+                new ExtensionFilter("Image Files", "png", "jpg", "jpeg" )
+            };
+            var selected = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
+            if (selected[0] != "")
             {
                 //var tex = RTUtility.Load(Path.GetFileNameWithoutExtension(selected));
-                var tex = RTUtility.Load(selected);
+                var tex = RTUtility.Load(selected[0]);
                 if (tex != null)
                     sim.SetMagmaVelocity(tex);
             }
+
         }
         public void onLoadTerrain()
         {
-            var selected = EditorUtility.OpenFilePanelWithFilters("Select terrain texture", "", new string[] { "Image files", "png,jpg,jpeg" });//*.png;*.jpg;*.jpeg
-            if (selected != "")
+
+            // Open file with filter
+            var extensions = new[] {
+                new ExtensionFilter("Image Files", "png", "jpg", "jpeg" )
+            };
+            var selected = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
+            if (selected[0] != "")
             {
                 //var tex = RTUtility.Load(Path.GetFileNameWithoutExtension(selected));
-                var tex = RTUtility.Load(selected);
+                var tex = RTUtility.Load(selected[0]);
                 if (tex != null)
                     sim.SetTerrain(tex);
             }
+
         }
         private int RaycastToPlain()
         {
@@ -217,8 +231,8 @@ namespace InterativeErosionProject
 
                 //
                 //float xInTexture = lastClick.x * ErosionSim.TEX_SIZE / ErosionSim.TOTAL_GRID_SIZE + ErosionSim.TOTAL_GRID_SIZE / 2;
-                float xInTexture = (lastClick.x  + ErosionSim.TOTAL_GRID_SIZE / 2)* ErosionSim.TEX_SIZE / ErosionSim.TOTAL_GRID_SIZE;
-                float yInTexture = (lastClick.z  + ErosionSim.TOTAL_GRID_SIZE / 2) * ErosionSim.TEX_SIZE / ErosionSim.TOTAL_GRID_SIZE;
+                float xInTexture = (lastClick.x + ErosionSim.TOTAL_GRID_SIZE / 2) * ErosionSim.TEX_SIZE / ErosionSim.TOTAL_GRID_SIZE;
+                float yInTexture = (lastClick.z + ErosionSim.TOTAL_GRID_SIZE / 2) * ErosionSim.TEX_SIZE / ErosionSim.TOTAL_GRID_SIZE;
 
                 if (xInTexture >= 0 && xInTexture <= ErosionSim.MAX_TEX_INDEX
                     && yInTexture >= 0 && yInTexture <= ErosionSim.MAX_TEX_INDEX)

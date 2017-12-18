@@ -123,17 +123,17 @@ namespace InterativeErosionProject
             var res = tempT2DRGBA.GetPixel(0, 0);
             return res;
         }
-        public Vector4 getDataRFloatEF(Point point)
+        public Vector4 getDataRFloatEF(Vector2 point)
         {
-            Graphics.CopyTexture(this.READ, 0, 0, point.x, point.y, 1, 1, tempT2DRFloat, 0, 0, 0, 0);
-            var del = new RenderTexture(1, 1, 0, RenderTextureFormat.ARGBHalf);
-            del.wrapMode = TextureWrapMode.Clamp;
-            del.filterMode = FilterMode.Point;
-            del.Create();
-            Graphics.ConvertTexture(tempRTRFloat, del);
+            Graphics.CopyTexture(this.READ, 0, 0, (int)(point.x * getMaxIndex()), (int)(point.y * getMaxIndex()), 1, 1, tempRTRFloat, 0, 0, 0, 0);
+            //var del = new RenderTexture(1, 1, 0, RenderTextureFormat.ARGBHalf);
+            //del.wrapMode = TextureWrapMode.Clamp;
+            //del.filterMode = FilterMode.Point;
+            //del.Create();
+            //Graphics.ConvertTexture(tempRTRFloat, del);
 
-            tempT2DRGBA = GetRTPixels(tempRTARGB, tempT2DRGBA);
-            var res = tempT2DRGBA.GetPixel(0, 0);
+            tempT2DRGBA = GetRTPixels(tempRTRFloat, tempT2DRFloat);
+            var res = tempT2DRFloat.GetPixel(0, 0);
             //tempT2DRFloat = GetRTPixels(tempRTRFloat, tempT2DRFloat);
             //var res = tempT2DRFloat.GetPixel(0, 0);
             return res;
