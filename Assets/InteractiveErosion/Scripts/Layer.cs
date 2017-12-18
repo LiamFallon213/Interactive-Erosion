@@ -33,8 +33,12 @@ namespace InterativeErosionProject
             this.link = link;
             this.size = size;
         }
-        private void FlowBefore(RenderTexture onWhat)
+        /// <summary>
+        ///  Calculates flow of field 
+        /// </summary>
+        public void Flow(RenderTexture onWhat)
         {
+            //main.SetFilterMode(FilterMode.Point);
             link.m_outFlowMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
             link.m_outFlowMat.SetFloat("T", 0.1f);
             link.m_outFlowMat.SetFloat("L", 1.0f);
@@ -42,14 +46,12 @@ namespace InterativeErosionProject
             link.m_outFlowMat.SetFloat("G", ErosionSim.GRAVITY);
             link.m_outFlowMat.SetFloat("_Layers", 4);
             link.m_outFlowMat.SetFloat("_Damping", viscosity);
-            link.m_outFlowMat.SetTexture("_TerrainField", onWhat);            
+            link.m_outFlowMat.SetTexture("_TerrainField", onWhat);
             link.m_outFlowMat.SetTexture("_Field", main.READ);
-        }
-        private void FlowAfter()
-        {
+
             Graphics.Blit(outFlow.READ, outFlow.WRITE, link.m_outFlowMat);
 
-            outFlow.Swap(); 
+            outFlow.Swap(); ;
 
             link.m_fieldUpdateMat.SetFloat("_TexSize", size);
             link.m_fieldUpdateMat.SetFloat("T", 0.1f);
@@ -58,23 +60,7 @@ namespace InterativeErosionProject
 
             Graphics.Blit(main.READ, main.WRITE, link.m_fieldUpdateMat);
             main.Swap();
-        }
-        /// <summary>
-        ///  Calculates flow of field 
-        /// </summary>
-        public void Flow(RenderTexture onWhat, RenderTexture onWhat2)
-        {
-            FlowBefore(onWhat);
-            link.m_outFlowMat.SetTexture("_Lava", onWhat2);
-            FlowAfter();
-        }
-        /// <summary>
-        ///  Calculates flow of field 
-        /// </summary>
-        public void Flow(RenderTexture onWhat)
-        {
-            FlowBefore(onWhat);            
-            FlowAfter();
+            //main.SetFilterMode(FilterMode.Bilinear);
         }
         virtual public void OnDestroy()
         {
