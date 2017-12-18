@@ -160,15 +160,6 @@ namespace InterativeErosionProject
         ///<summary> Moved regolith amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB</summary>
         private DoubleDataTexture regolithOutFlow;
 
-        //[SerializeField]
-        ///<summary> Contains water amount. Can't be negative!!</summary>
-        //private DoubleDataTexture waterField;
-
-        // [SerializeField]
-        ///<summary> Moved water amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB. Keeps only positive numbers</summary>
-        //private DoubleDataTexture waterOutFlow;
-
-
         /// <summary> Used for non-water erosion aka slippering of material</summary>
         [SerializeField]
         private RenderTexture slippageHeight;
@@ -351,7 +342,7 @@ namespace InterativeErosionProject
                     terrainField.SetValue(new Vector4(oceanDestroySedimentsLevel, 0f, 0f, 0f), rect);
                 }
 
-                water.Flow(terrainField.READ);
+                water.Flow(terrainField.READ, lava.main.READ);
                 water.CalcWaterVelocity(TIME_STEP);
             }
 

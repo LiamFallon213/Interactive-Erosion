@@ -18,8 +18,8 @@ Shader "Erosion/OutFlow"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			sampler2D _MainTex;
-			uniform sampler2D _TerrainField, _Field;
+			sampler2D _MainTex; 
+			uniform sampler2D _TerrainField, _Lava, _Field;
 			uniform float _TexSize, T, L, A, G, _Layers, _Damping;
 
 			struct v2f
@@ -36,11 +36,12 @@ Shader "Erosion/OutFlow"
 				return OUT;
 			}
 
-			float GetTotalHeight(float4 texData)
+			float GetTotalHeight(float2 uv)
 			{
+				float4 texData = tex2D(_TerrainField, uv);
 				float4 maskVec = float4(_Layers, _Layers - 1, _Layers - 2, _Layers - 3);
 				float4 addVec = min(float4(1,1,1,1),max(float4(0,0,0,0), maskVec));
-				return dot(texData, addVec);
+				return dot(texData, addVec) + tex2D(_Lava, uv);
 			}
 			bool CoordsExist(float2 coord)
 			{
