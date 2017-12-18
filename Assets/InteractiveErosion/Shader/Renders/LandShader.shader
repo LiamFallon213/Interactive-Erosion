@@ -8,6 +8,7 @@ Shader "Erosion/LandShader"
 		_LayerColor1("LayerColor1", Color) = (1,1,1,1)
 		_LayerColor2("LayerColor2", Color) = (1,1,1,1)
 		_LayerColor3("LayerColor3", Color) = (1,1,1,1)
+		_LavaColor("LavaColor", Color) = (1,1,1,1)
 	}
 	SubShader 
 	{
@@ -20,8 +21,8 @@ Shader "Erosion/LandShader"
 		#pragma target 3.0
 		#pragma glsl
 
-		sampler2D _MainTex;
-		float3 _LayerColor0, _LayerColor1, _LayerColor2, _LayerColor3;
+		sampler2D _MainTex, _Lava;
+		float3 _LayerColor0, _LayerColor1, _LayerColor2, _LayerColor3, _LavaColor;
 		uniform float _ScaleY, _Layers, _TexSize;
 		
 		struct Input 
@@ -29,11 +30,13 @@ Shader "Erosion/LandShader"
 			float2 uv_MainTex;
 		};
 		
-		float GetTotalHeight(float4 texData) 
+		float GetTotalHeight(float4 texData, float lavaHeight) 
 		{
 			float4 maskVec = float4(_Layers, _Layers-1, _Layers-2, _Layers-3);
 			float4 addVec = min(float4(1,1,1,1),max(float4(0,0,0,0), maskVec));	
-			return dot(texData, addVec);
+			float res = dot(texData, addVec);
+			res += lavaHeight;
+			return res; 
 		}
 		
 		
@@ -41,16 +44,16 @@ Shader "Erosion/LandShader"
 		{
 			v.tangent = float4(1,0,0,1);
 		
-			v.vertex.y += GetTotalHeight(tex2Dlod(_MainTex, float4(v.texcoord.xy, 0.0, 0.0))) * _ScaleY;		
+			v.vertex.y += GetTotalHeight(tex2Dlod(_MainTex, float4(v.texcoord.xy, 0.0, 0.0)), tex2Dlod(_Lava, float4(v.texcoord.xy, 0.0, 0.0))) * _ScaleY;
 		}
 		
 		float3 FindNormal(float2 uv, float u)
         {
 
-        	float ht0 = GetTotalHeight(tex2D(_MainTex, uv + float2(-u, 0)));
-            float ht1 = GetTotalHeight(tex2D(_MainTex, uv + float2(u, 0)));
-            float ht2 = GetTotalHeight(tex2D(_MainTex, uv + float2(0, -u)));
-            float ht3 = GetTotalHeight(tex2D(_MainTex, uv + float2(0, u)));
+        	float ht0 = GetTotalHeight(tex2D(_MainTex, uv + float2(-u, 0)), tex2D(_Lava, uv + float2(-u, 0)));
+            float ht1 = GetTotalHeight(tex2D(_MainTex, uv + float2(u, 0)), tex2D(_Lava, uv + float2(u, 0)));
+            float ht2 = GetTotalHeight(tex2D(_MainTex, uv + float2(0, -u)), tex2D(_Lava, uv + float2(0, -u)));
+            float ht3 = GetTotalHeight(tex2D(_MainTex, uv + float2(0, u)), tex2D(_Lava, uv + float2(0, u)));
             
             float2 _step = float2(1.0, 0.0);
 
@@ -69,6 +72,9 @@ Shader "Erosion/LandShader"
 			o.Albedo = lerp(_LayerColor0, _LayerColor1, clamp(hts.y * 2.0, 0.0, 1.0));
 			o.Albedo = lerp(o.Albedo, _LayerColor2, clamp(hts.z * 2.0, 0.0, 1.0));
 			o.Albedo = lerp(o.Albedo, _LayerColor3, clamp(hts.w * 2.0, 0.0, 1.0));
+
+			float lavaHeight = tex2D(_Lava, IN.uv_MainTex);
+			o.Albedo = lerp(o.Albedo, _LavaColor, clamp(lavaHeight* 2.0, 0.0, 1.0));
 				
 			o.Alpha = 1.0;
 			o.Normal = n;

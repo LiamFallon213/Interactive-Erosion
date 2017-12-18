@@ -144,7 +144,7 @@ namespace InterativeErosionProject
         public int oceanWidth = 200;
 
         ///<summary> Meshes</summary>
-        private GameObject[] gridLand, gridWater, arrowsObjects, gridLava;
+        private GameObject[] gridLand, gridWater, arrowsObjects;//, gridLava;
 
         ///<summary> Contains all 4 layers in ARGB</summary>
 
@@ -221,7 +221,7 @@ namespace InterativeErosionProject
         private void Start()
         {
             //lava = new Layer("Lava", TEX_SIZE, 0.02f, this);
-            lava = new Layer("Lava", TEX_SIZE, 0.1f, this);
+            lava = new Layer("Lava", TEX_SIZE, 1f, this);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
 
             layersColors[0].a = 0.98f;
@@ -408,6 +408,9 @@ namespace InterativeErosionProject
                 currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
                 currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
 
+                currentOverlay.getMaterial().SetVector("_LavaColor", new Vector4(1f,0f,0f,1f));
+                currentOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
+
                 currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
                 currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
                 currentOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
@@ -480,12 +483,12 @@ namespace InterativeErosionProject
             m_waterMat.SetVector("_SedimentColor", new Vector4(1f - 0.808f, 1f - 0.404f, 1f - 0.00f, 1f));
 
 
-            lavaMat.SetFloat("_ScaleY", scaleY);
-            lavaMat.SetFloat("_TexSize", (float)TEX_SIZE);
-            lavaMat.SetTexture("_WaterField", lava.main.READ);
-            lavaMat.SetTexture("_Terrain", terrainField.READ);
-            lavaMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
-            lavaMat.SetVector("_SunDir", sun.transform.forward * -1.0f);
+            //lavaMat.SetFloat("_ScaleY", scaleY);
+            //lavaMat.SetFloat("_TexSize", (float)TEX_SIZE);
+            //lavaMat.SetTexture("_WaterField", lava.main.READ);
+            //lavaMat.SetTexture("_Terrain", terrainField.READ);
+            //lavaMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
+            //lavaMat.SetVector("_SunDir", sun.transform.forward * -1.0f);
 
 
             //foreach (var item in m_gridLand)
@@ -582,7 +585,7 @@ namespace InterativeErosionProject
 
                     Destroy(gridLand[idx]);
                     Destroy(gridWater[idx]);
-                    Destroy(gridLava[idx]);
+                    //Destroy(gridLava[idx]);
 
                 }
             }
@@ -595,7 +598,7 @@ namespace InterativeErosionProject
 
             gridLand = new GameObject[numGrids * numGrids];
             gridWater = new GameObject[numGrids * numGrids];
-            gridLava = new GameObject[numGrids * numGrids];
+            //gridLava = new GameObject[numGrids * numGrids];
             arrowsObjects = new GameObject[numGrids * numGrids];
 
             for (int x = 0; x < numGrids; x++)
@@ -625,13 +628,13 @@ namespace InterativeErosionProject
                     gridLand[idx].transform.SetParent(this.transform);
 
 
-                    gridLava[idx] = new GameObject("Grid Lava " + idx.ToString());
-                    gridLava[idx].AddComponent<MeshFilter>();
-                    gridLava[idx].AddComponent<MeshRenderer>();
-                    gridLava[idx].GetComponent<Renderer>().material = lavaMat;
-                    gridLava[idx].GetComponent<MeshFilter>().mesh = mesh;
-                    gridLava[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
-                    gridLava[idx].transform.SetParent(this.transform);
+                    //gridLava[idx] = new GameObject("Grid Lava " + idx.ToString());
+                    //gridLava[idx].AddComponent<MeshFilter>();
+                    //gridLava[idx].AddComponent<MeshRenderer>();
+                    //gridLava[idx].GetComponent<Renderer>().material = lavaMat;
+                    //gridLava[idx].GetComponent<MeshFilter>().mesh = mesh;
+                    //gridLava[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
+                    //gridLava[idx].transform.SetParent(this.transform);
 
                     gridWater[idx] = new GameObject("Grid Water " + idx.ToString());
                     gridWater[idx].AddComponent<MeshFilter>();
