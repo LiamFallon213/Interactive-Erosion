@@ -26,7 +26,7 @@ namespace InterativeErosionProject
         ///<summary> Updates field according to outflow</summary>
         public Material m_fieldUpdateMat;
         public Material m_waterVelocityMat, m_diffuseVelocityMat;
-
+        public Material heatExchangeMat;
         /// <summary> Calculates angle for each cell </summary>
         public Material m_tiltAngleMat;
         ///<summary> Calculates layer erosion basing on the forces that are caused by the running water</summary>
@@ -52,6 +52,8 @@ namespace InterativeErosionProject
 
         [SerializeField]
         private int m_seed = 0;
+
+
 
         //The number of layers used in the simulation. Must be 1, 2, 3 or, 4
         private const int TERRAIN_LAYERS = 4;
@@ -181,7 +183,7 @@ namespace InterativeErosionProject
         private DoubleDataTexture magmaVelocity;
 
         [SerializeField]
-        private Layer lava;
+        private LayerWithTemperature lava;
 
         [SerializeField]
         private LayerWithErosion water;
@@ -221,7 +223,7 @@ namespace InterativeErosionProject
         private void Start()
         {
             //lava = new Layer("Lava", TEX_SIZE, 0.02f, this);
-            lava = new Layer("Lava", TEX_SIZE, 1f, this);
+            lava = new LayerWithTemperature("Lava", TEX_SIZE, 1f, this, 0.6f, 790f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
 
             layersColors[0].a = 0.98f;
@@ -373,8 +375,10 @@ namespace InterativeErosionProject
 
             lava.SetFilterMode(FilterMode.Point);
             lava.Flow(terrainField.READ);
+            if (heatExchange)
+                lava.HeatExchange();
             lava.SetFilterMode(FilterMode.Bilinear);
-
+            
             if (simulateWaterFlow)
             {
                 /// Evaporate water everywhere 
@@ -386,7 +390,7 @@ namespace InterativeErosionProject
 
             terrainField.SetFilterMode(FilterMode.Bilinear);
             water.SetFilterMode(FilterMode.Bilinear);
-
+            
             //sedimentDeposition.SetFilterMode(FilterMode.Bilinear);
         }
         private void Update()
@@ -408,7 +412,7 @@ namespace InterativeErosionProject
                 currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
                 currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
 
-                currentOverlay.getMaterial().SetVector("_LavaColor", new Vector4(1f,0f,0f,1f));
+               // currentOverlay.getMaterial().SetVector("_LavaColor", new Vector4(1f, 0f, 0f, 1f));
                 currentOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
 
                 currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
@@ -819,6 +823,8 @@ namespace InterativeErosionProject
         internal void AddLava(Vector2 point)
         {
             lava.main.ChangeValueGauss(point, brushSize, brushPower, new Vector4(1f, 0f, 0f, 0f));
+            lava.main.ChangeValueGauss(point, brushSize, 500f, new Vector4(0f, 0f, 0f, 1f));
+
         }
         public void AddSediment(Vector2 point)
         {
@@ -885,7 +891,7 @@ namespace InterativeErosionProject
             //return getData4Float32bits(m_terrainField.READ, point);
             return terrainField.getDataRGBAFloatEF(point);
         }
-        
+
         internal Vector4 getWaterFlow(Vector2 point)
         {
             return water.outFlow.getDataRGBAFloatEF(point);
@@ -897,6 +903,10 @@ namespace InterativeErosionProject
         internal float getDeposition(Vector2 point)
         {
             return water.sedimentDeposition.getDataRGBAFloatEF(point).x;
+        }
+        internal float getLavaTemperature(Vector2 point)
+        {
+            return lava.main.getDataRGBAFloatEF(point).w;
         }
         internal float getWaterLevel(Vector2 point)
         {
@@ -923,6 +933,11 @@ namespace InterativeErosionProject
         public void SetSimulateWater(bool value)
         {
             simulateWaterFlow = value;
+        }
+        private bool heatExchange = false;
+        public void SetHeatExchange(bool value)
+        {
+            heatExchange = value;
         }
         public void SetDepositionRate(float value)
         {

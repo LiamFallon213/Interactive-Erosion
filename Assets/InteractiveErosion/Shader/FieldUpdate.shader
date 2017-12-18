@@ -47,7 +47,8 @@ Shader "Erosion/FieldUpdate"
 			{
 				float u = 1.0f / _TexSize;
 
-				float field = tex2D(_MainTex, IN.uv).x;
+				float4 oldField = tex2D(_MainTex, IN.uv);
+				float field = oldField.x;
 
 				float4 flow = tex2D(_OutFlowField, IN.uv);
 
@@ -97,7 +98,7 @@ Shader "Erosion/FieldUpdate"
 				//The water ht is the previously calculated ht plus the net volume change divided by lenght squared
 				field = max(0, field + V / (L*L));
 
-				return float4(field,0,0,0);
+				return float4(field, oldField.y, oldField.z, oldField.w);
 
 			}
 

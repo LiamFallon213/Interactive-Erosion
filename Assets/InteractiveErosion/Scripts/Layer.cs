@@ -19,17 +19,17 @@ namespace InterativeErosionProject
         [SerializeField]//readonly
         public DoubleDataTexture outFlow;
 
-        private float viscosity;
+        private float damping;
         protected readonly ErosionSim link;
         protected float size;
 
-        public Layer(string name, int size, float viscosity, ErosionSim link)
+        public Layer(string name, int size, float damping, ErosionSim link)
         {
             main = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point); // was RFloat
             main.ClearColor();
             outFlow = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point); //was ARGBHalf
             outFlow.ClearColor();
-            this.viscosity = viscosity;
+            this.damping = damping;
             this.link = link;
             this.size = size;
         }
@@ -45,7 +45,7 @@ namespace InterativeErosionProject
             link.m_outFlowMat.SetFloat("A", 1.0f);
             link.m_outFlowMat.SetFloat("G", ErosionSim.GRAVITY);
             link.m_outFlowMat.SetFloat("_Layers", 4);
-            link.m_outFlowMat.SetFloat("_Damping", viscosity);
+            link.m_outFlowMat.SetFloat("_Damping", damping);
             link.m_outFlowMat.SetTexture("_TerrainField", onWhat);
             link.m_outFlowMat.SetTexture("_Field", main.READ);
 
@@ -67,18 +67,45 @@ namespace InterativeErosionProject
             main.Destroy();
             outFlow.Destroy();
         }
-        virtual public void SetFilterMode(FilterMode mode)
+        public void SetFilterMode(FilterMode mode)
         {
             main.SetFilterMode(mode);
         }
+
+        
     }
     [System.Serializable]
-    public class LayerWithVelocity : Layer
+    public class LayerWithTemperature : Layer
+    {
+        ///<summary>Must be in 0..1 range</summary>
+        private readonly float emissivity;
+        ///<summary> joule per kelvin, J/K</summary>
+        private readonly float heatCapacity;
+        private static readonly float StefanBoltzmannConstant = 5.670367e-8f;
+
+        public LayerWithTemperature(string name, int size, float damping, ErosionSim link, float emissivity, float heatCapacity) : base(name, size, damping, link)
+        {
+            this.emissivity = Mathf.Clamp01(emissivity);
+            this.heatCapacity = heatCapacity;
+        }
+        internal void HeatExchange()
+        {
+            link.heatExchangeMat.SetFloat("_StefanBoltzmannConstant", StefanBoltzmannConstant);
+            link.heatExchangeMat.SetFloat("_Emissivity", emissivity);
+            link.heatExchangeMat.SetFloat("_HeatCapacity", heatCapacity);
+            //link.heatExchangeMat.SetTexture("_OutFlowField", outFlow.READ);
+
+            Graphics.Blit(main.READ, main.WRITE, link.heatExchangeMat);
+            main.Swap();
+        }
+    }
+    [System.Serializable]
+    public class LayerWithVelocity : LayerWithTemperature
     {
         ///<summary> Water speed (2 channels). Used for sediment movement and dissolution</summary>
         [SerializeField]
         public DoubleDataTexture velocity;
-        public LayerWithVelocity(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link)
+        public LayerWithVelocity(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link, 0.96f, 4181f)
         {
             velocity = new DoubleDataTexture("Water Velocity", size, RenderTextureFormat.ARGBFloat, FilterMode.Bilinear);// was RGHalf
             velocity.ClearColor();

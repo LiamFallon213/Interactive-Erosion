@@ -47,7 +47,7 @@ namespace InterativeErosionProject
 
             sb.Append("\nTerrain deposition(+)/dissolution(-): ").Append(sim.getDeposition(ControlPanel.selectedPoint));
 
-
+            sb.Append("\nLava temperature, K: ").Append(sim.getLavaTemperature(ControlPanel.selectedPoint));
             text.text = sb.ToString();
 
         }
