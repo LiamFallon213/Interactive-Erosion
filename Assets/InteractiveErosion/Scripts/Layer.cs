@@ -19,6 +19,7 @@ namespace InterativeErosionProject
         [SerializeField]//readonly
         public DoubleDataTexture outFlow;
 
+        [SerializeField]
         private float damping;
         protected readonly ErosionSim link;
         protected float size;
@@ -40,9 +41,9 @@ namespace InterativeErosionProject
         {
             //main.SetFilterMode(FilterMode.Point);
             link.m_outFlowMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
-            link.m_outFlowMat.SetFloat("T", 0.1f);
-            link.m_outFlowMat.SetFloat("L", 1.0f);
-            link.m_outFlowMat.SetFloat("A", 1.0f);
+            link.m_outFlowMat.SetFloat("T", link.timeStep);
+            link.m_outFlowMat.SetFloat("L",link.PIPE_LENGTH);
+            link.m_outFlowMat.SetFloat("A", link.CELL_AREA);
             link.m_outFlowMat.SetFloat("G", ErosionSim.GRAVITY);
             link.m_outFlowMat.SetFloat("_Layers", 4);
             link.m_outFlowMat.SetFloat("_Damping", damping);
@@ -54,7 +55,7 @@ namespace InterativeErosionProject
             outFlow.Swap(); ;
 
             link.m_fieldUpdateMat.SetFloat("_TexSize", size);
-            link.m_fieldUpdateMat.SetFloat("T", 0.1f);
+            link.m_fieldUpdateMat.SetFloat("T", link.timeStep);
             link.m_fieldUpdateMat.SetFloat("L", 1f);
             link.m_fieldUpdateMat.SetTexture("_OutFlowField", outFlow.READ);
 
@@ -93,7 +94,7 @@ namespace InterativeErosionProject
             link.heatExchangeMat.SetFloat("_StefanBoltzmannConstant", StefanBoltzmannConstant);
             link.heatExchangeMat.SetFloat("_Emissivity", emissivity);
             link.heatExchangeMat.SetFloat("_HeatCapacity", heatCapacity);
-            link.heatExchangeMat.SetFloat("T", 0.1f);
+            link.heatExchangeMat.SetFloat("T", link.timeStep);
             //link.heatExchangeMat.SetTexture("_OutFlowField", outFlow.READ);
 
             Graphics.Blit(main.READ, main.WRITE, link.heatExchangeMat);

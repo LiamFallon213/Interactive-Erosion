@@ -53,7 +53,8 @@ namespace InterativeErosionProject
         [SerializeField]
         private int m_seed = 0;
 
-
+        [SerializeField]
+        public float timeStep = 0.1f;
 
         //The number of layers used in the simulation. Must be 1, 2, 3 or, 4
         private const int TERRAIN_LAYERS = 4;
@@ -162,15 +163,7 @@ namespace InterativeErosionProject
         ///<summary> Moved regolith amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB</summary>
         private DoubleDataTexture regolithOutFlow;
 
-        //[SerializeField]
-        ///<summary> Contains water amount. Can't be negative!!</summary>
-        //private DoubleDataTexture waterField;
-
-        // [SerializeField]
-        ///<summary> Moved water amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB. Keeps only positive numbers</summary>
-        //private DoubleDataTexture waterOutFlow;
-
-
+        
         /// <summary> Used for non-water erosion aka slippering of material</summary>
         [SerializeField]
         private RenderTexture slippageHeight;
@@ -198,13 +191,13 @@ namespace InterativeErosionProject
         //You can change this but must be a pow2 number, ie 256, 512, 1024 etc
         public const int TOTAL_GRID_SIZE = 512;  // TEX_SIZE /2;//512;//1024;
         //You can make this smaller but not larger
-        private const float TIME_STEP = 0.1f;
+        //private const float TIME_STEP = 0.1f;
 
         ///<summary>Size of 1 mesh in vertexes</summary>
         private const int GRID_SIZE = 129; // don/t change it. It allows about 33k triangles in mesh, while maximum 65k
-        private const float PIPE_LENGTH = 1.0f;
-        private const float CELL_LENGTH = 1.0f;
-        private const float CELL_AREA = 1.0f; //CELL_LENGTH*CELL_LENGTH
+        public float PIPE_LENGTH = 1.0f;
+        public  float CELL_LENGTH = 1.0f;
+        public float CELL_AREA = 1.0f; //CELL_LENGTH*CELL_LENGTH
         public const float GRAVITY = 9.81f;
 
 
@@ -222,7 +215,7 @@ namespace InterativeErosionProject
 
         private void Start()
         {
-            //lava = new Layer("Lava", TEX_SIZE, 0.02f, this);
+            //lava = new Layer("Lava", TEX_SIZE, 0.02f, this);0.98f
             lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
 
@@ -305,13 +298,13 @@ namespace InterativeErosionProject
 
                     m_slippageOutflowMat.SetFloat("_TexSize", (float)TEX_SIZE);
                     m_slippageOutflowMat.SetFloat("_Layers", (float)(i + 1));
-                    m_slippageOutflowMat.SetFloat("T", TIME_STEP);
+                    m_slippageOutflowMat.SetFloat("T", timeStep);
                     m_slippageOutflowMat.SetTexture("_MaxSlippageHeights", slippageHeight);
                     m_slippageOutflowMat.SetTexture("_TerrainField", terrainField.READ);
 
                     Graphics.Blit(null, slippageOutflow, m_slippageOutflowMat);
 
-                    m_slippageUpdateMat.SetFloat("T", TIME_STEP);
+                    m_slippageUpdateMat.SetFloat("T", timeStep);
                     m_slippageUpdateMat.SetFloat("_TexSize", (float)TEX_SIZE);
                     m_slippageUpdateMat.SetFloat("_Layers", (float)(i + 1));
                     m_slippageUpdateMat.SetTexture("_SlippageOutflow", slippageOutflow);
@@ -354,14 +347,14 @@ namespace InterativeErosionProject
                 }
 
                 water.Flow(terrainField.READ);
-                water.CalcWaterVelocity(TIME_STEP);
+                water.CalcWaterVelocity(timeStep);
             }
 
 
 
             if (simulateWaterErosion)
             {
-                water.SimulateErosion(terrainField, dissolvingConstant, minTiltAngle, TERRAIN_LAYERS, TIME_STEP);
+                water.SimulateErosion(terrainField, dissolvingConstant, minTiltAngle, TERRAIN_LAYERS, timeStep);
             }
             //if (simulateRigolith)
             //{
@@ -906,6 +899,10 @@ namespace InterativeErosionProject
         internal Vector4 getWaterFlow(Vector2 point)
         {
             return water.outFlow.getDataRGBAFloatEF(point);
+        }
+        internal Vector4 getLavaFlow(Vector2 point)
+        {
+            return lava.outFlow.getDataRGBAFloatEF(point);
         }
         internal Vector4 getSedimentInWater(Vector2 point)
         {

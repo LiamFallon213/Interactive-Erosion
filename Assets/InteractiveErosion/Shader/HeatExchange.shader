@@ -48,7 +48,9 @@ Shader "Erosion/HeatExchange"
 			
 			{ 				
 				float temperatureChange = QChange / (_HeatCapacity * amount);//* amount
+				//if (!isinf(temperatureChange)) 
 				oldValue.a += temperatureChange;//change only Alpha channel - temperature!
+				oldValue.a = max(oldValue.a, 0.0);
 			}
 		}
 		else
