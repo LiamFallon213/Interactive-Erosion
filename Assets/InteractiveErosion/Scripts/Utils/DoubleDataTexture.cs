@@ -66,7 +66,7 @@ namespace InterativeErosionProject
         static private void LoadMaterials()
         {
             string path = "Materials/UniversalCS/";
-            setFloatValueMat = Resources.Load(path+"SetFloatValue", typeof(Material)) as Material;
+            setFloatValueMat = Resources.Load(path + "SetFloatValue", typeof(Material)) as Material;
             changeValueMat = Resources.Load(path + "ChangeValue", typeof(Material)) as Material;
             changeValueZeroControlMat = Resources.Load(path + "ChangeValueZeroControl", typeof(Material)) as Material;
             getValueMat = Resources.Load(path + "GetValue", typeof(Material)) as Material;
@@ -171,28 +171,26 @@ namespace InterativeErosionProject
             RTUtility.Blit(this.READ, this.WRITE, setFloatValueMat, rect, 0, false);
             this.Swap();
         }
-        public void ChangeValueGauss(Vector2 point, float radius, float amount, Vector4 layerMask)
+        public void ChangeValueGauss(Vector2 point, float radius, Vector4 value)
         {
-            if (amount != 0f)
+            if (value != Vector4.zero)
             {
                 changeValueGaussMat.SetVector("_Point", point);
                 changeValueGaussMat.SetFloat("_Radius", radius);
-                changeValueGaussMat.SetFloat("_Amount", amount);
-                changeValueGaussMat.SetVector("_LayerMask", layerMask);
+                changeValueGaussMat.SetVector("_Value", value);
 
                 Graphics.Blit(this.READ, this.WRITE, changeValueGaussMat);
                 this.Swap();
             }
         }
 
-        public void ChangeValueGaussZeroControl(Vector2 point, float radius, float amount, Vector4 layerMask)
+        public void ChangeValueGaussZeroControl(Vector2 point, float radius,  Vector4 value)
         {
-            if (amount != 0f)
+            if (value != Vector4.zero)
             {
                 changeValueGaussZeroControlMat.SetVector("_Point", point);
-                changeValueGaussZeroControlMat.SetFloat("_Radius", radius);
-                changeValueGaussZeroControlMat.SetFloat("_Amount", amount);
-                changeValueGaussZeroControlMat.SetVector("_LayerMask", layerMask);
+                changeValueGaussZeroControlMat.SetFloat("_Radius", radius);                
+                changeValueGaussZeroControlMat.SetVector("_Value", value);
 
                 Graphics.Blit(this.READ, this.WRITE, changeValueGaussZeroControlMat);
                 this.Swap();

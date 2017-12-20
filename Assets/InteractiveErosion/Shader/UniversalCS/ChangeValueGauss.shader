@@ -20,8 +20,8 @@ Shader "Erosion/ChangeValueGauss"
 
 		sampler2D _MainTex;
 	uniform float2 _Point;
-	uniform float _Radius, _Amount;
-	uniform float4 _LayerMask;
+	uniform float _Radius;
+	uniform float4 _Value;
 
 	struct v2f
 	{
@@ -47,11 +47,20 @@ Shader "Erosion/ChangeValueGauss"
 
 		float gauss = GetGaussFactor(_Point - IN.uv, _Radius*_Radius);
 
-	float value = gauss * _Amount;
+		float4 changeValue = gauss * _Value;
 
-	float4 res = tex2D(_MainTex, IN.uv) + _LayerMask * value;
+		float4 oldValue = tex2D(_MainTex, IN.uv);
+		float oldTemperature = oldValue.a;
+		float oldAmount = oldValue.r;
+		float newTemperature = changeValue.a;
+		float newAmount = changeValue.r;
 
-	return res; // float4(waterAmount, 0, 0, 0);
+		float4 res = oldValue + changeValue;
+		if (oldAmount + newAmount > 0.0)
+			res.a = (oldTemperature * oldAmount + newTemperature * newAmount) / (oldAmount + newAmount);
+		else
+			res.a = 0.0;
+		return res;
 	}
 
 		ENDCG

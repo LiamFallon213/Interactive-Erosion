@@ -39,48 +39,9 @@ Shader "Erosion/LandShader"
 
 				//temperatureInKelvins = clamp(temperatureInKelvins, 1000.0, 40000.0);// / 100.0;
 				temperatureInKelvins = temperatureInKelvins / 100.0;
-
-				/*
-				if (temperatureInKelvins <= 66.0)
-					retColor.r = 1.0;
-				else
-				{
-					retColor.r = (temperatureInKelvins - 60.0) / 255.0;
-					retColor.r = 329.698727446 * (pow(retColor.r, 2.0) - 0.1332047592) / 255.0;
-					saturate(retColor.r);
-				}
-
-				if (temperatureInKelvins <= 66.0)
-				{
-
-					retColor.g = temperatureInKelvins;
-					retColor.g = (99.4708025861 * log(retColor.g) - 161.1195681661) / 255.0;
-					saturate(retColor.g);
-				}
-				else
-				{
-
-					retColor.g = (temperatureInKelvins - 60.0) / 255.0;
-					retColor.g = 288.1221695283 * (pow(retColor.g,2.0) -0.0755148492) / 255.0;
-					saturate(retColor.g);
-				}
-
-
-				if (temperatureInKelvins >= 66.0)
-					retColor.b = 1.0;
-				else
-				{
-					if (temperatureInKelvins <= 19.0)
-						retColor.b = 0.0;
-					else
-					{
-						retColor.b = (temperatureInKelvins - 10.0) / 255.0;
-						retColor.b = (138.5177312231 * log(retColor.b) - 305.0447927307) / 255.0;
-						saturate(retColor.b);
-					}
-				}*/
-				temperatureInKelvins = min(temperatureInKelvins, 13.0);
-				if (temperatureInKelvins < 5.0)
+								
+				//temperatureInKelvins = min(temperatureInKelvins, 13.0); // limit temperature from above
+				if (temperatureInKelvins < 5.47)
 					retColor = float3(0, 0, 0);
 				else
 				{
@@ -103,7 +64,7 @@ Shader "Erosion/LandShader"
 				else
 					retColor.z = saturate(0.54320678911019607843 * log(temperatureInKelvins - 10.0) - 1.19625408914);
 				}
-				return retColor;
+				return retColor;// *0.8;
 		}
 			float GetTotalHeight(float4 texData, float lavaHeight)
 		{
@@ -151,7 +112,7 @@ Shader "Erosion/LandShader"
 			float4 lava = tex2D(_Lava, IN.uv_MainTex);
 			o.Albedo = lerp(o.Albedo, _LavaColor, clamp(lava.x * 2.0, 0.0, 1.0));
 
-			if (lava.r > 0.0)
+			//if (lava.r > 0.0)
 			{
 				fixed3 light = ColorTemperatureToRGB(lava.a);
 				o.Emission = light;

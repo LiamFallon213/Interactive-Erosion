@@ -37,9 +37,7 @@ namespace InterativeErosionProject
         public Material m_slippageHeightMat, m_slippageOutflowMat, m_slippageUpdateMat;
         public Material m_disintegrateAndDepositMat, m_applyFreeSlipMat;
         public Material moveByLiquidMat;
-
-        /// <summary> Movement speed of point of water source</summary>
-        //private float m_waterInputSpeed = 0.01f;
+                
         private Vector2 waterInputPoint = new Vector2(-1f, 1f);
         private float waterInputAmount = 0f;
         private float waterInputRadius = 0.008f;
@@ -48,7 +46,9 @@ namespace InterativeErosionProject
         private float waterDrainageAmount = 0f;
         private float waterDrainageRadius = 0.008f;
 
-
+        private Vector2 lavaInputPoint = new Vector2(-1f, 1f);
+        private float lavaInputAmount = 0f;
+        private float lavaInputRadius = 0.008f;
 
         [SerializeField]
         private int m_seed = 0;
@@ -223,7 +223,7 @@ namespace InterativeErosionProject
         private void Start()
         {
             //lava = new Layer("Lava", TEX_SIZE, 0.02f, this);
-            lava = new LayerWithTemperature("Lava", TEX_SIZE, 1f, this, 0.6f, 790f);
+            lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
 
             layersColors[0].a = 0.98f;
@@ -338,11 +338,11 @@ namespace InterativeErosionProject
 
 
                 if (waterInputAmount > 0f)
-                    water.main.ChangeValueGaussZeroControl(waterInputPoint, waterInputRadius, waterInputAmount, new Vector4(1f, 0f, 0f, 0f));// WaterInput();
+                    water.main.ChangeValueGauss(waterInputPoint, waterInputRadius, new Vector4(waterInputAmount, 0f, 0f, 0f));
                 if (waterDrainageAmount > 0f)
                 {
-                    water.main.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, waterDrainageAmount * -1f, new Vector4(1f, 0f, 0f, 0f));
-                    terrainField.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, waterDrainageAmount * -1f, new Vector4(0f, 0f, 0f, 1f));
+                    water.main.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, new Vector4(waterDrainageAmount * -1f, 0f, 0f, 0f));
+                    terrainField.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, new Vector4(0f, 0f, 0f, waterDrainageAmount * -1f));
                 }
 
                 //set specified levels of water and terrain at oceans
@@ -375,10 +375,12 @@ namespace InterativeErosionProject
 
             lava.SetFilterMode(FilterMode.Point);
             lava.Flow(terrainField.READ);
+            if (lavaInputAmount > 0f)
+                lava.main.ChangeValueGauss(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 5000f));
             if (heatExchange)
                 lava.HeatExchange();
             lava.SetFilterMode(FilterMode.Bilinear);
-            
+
             if (simulateWaterFlow)
             {
                 /// Evaporate water everywhere 
@@ -390,7 +392,7 @@ namespace InterativeErosionProject
 
             terrainField.SetFilterMode(FilterMode.Bilinear);
             water.SetFilterMode(FilterMode.Bilinear);
-            
+
             //sedimentDeposition.SetFilterMode(FilterMode.Bilinear);
         }
         private void Update()
@@ -412,7 +414,7 @@ namespace InterativeErosionProject
                 currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
                 currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
 
-               // currentOverlay.getMaterial().SetVector("_LavaColor", new Vector4(1f, 0f, 0f, 1f));
+                // currentOverlay.getMaterial().SetVector("_LavaColor", new Vector4(1f, 0f, 0f, 1f));
                 currentOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
 
                 currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
@@ -786,66 +788,75 @@ namespace InterativeErosionProject
         {
             Vector4 layerMask = default(Vector4);
             if (layer == MaterialsForEditing.stone)
-                layerMask = new Vector4(1f, 0f, 0f, 0f);
+                layerMask = new Vector4(brushPower, 0f, 0f, 0f);
             else if (layer == MaterialsForEditing.cobble)
-                layerMask = new Vector4(0f, 1f, 0f, 0f);
+                layerMask = new Vector4(0f, brushPower, 0f, 0f);
             else if (layer == MaterialsForEditing.clay)
-                layerMask = new Vector4(0f, 0f, 1f, 0f);
+                layerMask = new Vector4(0f, 0f, brushPower, 0f);
             else if (layer == MaterialsForEditing.sand)
-                layerMask = new Vector4(0f, 0f, 0f, 1f);
-            terrainField.ChangeValueGauss(point, brushSize, brushPower, layerMask);
+                layerMask = new Vector4(0f, 0f, 0f, brushPower);
+            terrainField.ChangeValueGauss(point, brushSize, layerMask);
         }
         public void RemoveFromTerrainLayer(MaterialsForEditing layer, Vector2 point)
         {
             Vector4 layerMask = default(Vector4);
             if (layer == MaterialsForEditing.stone)
             {
-                layerMask = new Vector4(1f, 0f, 0f, 0f);
-                terrainField.ChangeValueGauss(point, brushSize, brushPower * -1f, layerMask);
+                layerMask = new Vector4(brushPower * -1f, 0f, 0f, 0f);
+                terrainField.ChangeValueGauss(point, brushSize, layerMask);
                 return;
             }
             else if (layer == MaterialsForEditing.cobble)
-                layerMask = new Vector4(0f, 1f, 0f, 0f);
+                layerMask = new Vector4(0f, brushPower * -1f, 0f, 0f);
             else if (layer == MaterialsForEditing.clay)
-                layerMask = new Vector4(0f, 0f, 1f, 0f);
+                layerMask = new Vector4(0f, 0f, brushPower * -1f, 0f);
             else if (layer == MaterialsForEditing.sand)
-                layerMask = new Vector4(0f, 0f, 0f, 1f);
-            terrainField.ChangeValueGaussZeroControl(point, brushSize, brushPower * -1f, layerMask);
+                layerMask = new Vector4(0f, 0f, 0f, brushPower * -1f);
+            terrainField.ChangeValueGaussZeroControl(point, brushSize, layerMask);
         }
         public void AddWater(Vector2 point)
         {
-            water.main.ChangeValueGauss(point, brushSize, brushPower, new Vector4(1f, 0f, 0f, 0f));
+            water.main.ChangeValueGauss(point, brushSize, new Vector4(brushPower, 0f, 0f, 0f));
         }
         public void RemoveWater(Vector2 point)
         {
-            water.main.ChangeValueGaussZeroControl(point, brushSize, brushPower * -1f, new Vector4(1f, 0f, 0f, 0f));
-        }
+            water.main.ChangeValueGaussZeroControl(point, brushSize, new Vector4(brushPower * -1f, 0f, 0f, 0f));
+        }        
         internal void AddLava(Vector2 point)
         {
-            lava.main.ChangeValueGauss(point, brushSize, brushPower, new Vector4(1f, 0f, 0f, 0f));
-            lava.main.ChangeValueGauss(point, brushSize, 500f, new Vector4(0f, 0f, 0f, 1f));
-
+            lava.main.ChangeValueGauss(point, brushSize, new Vector4(brushPower, 0f, 0f, 5000f));// 5000f));
+        }
+        public void RemoveLava(Vector2 point)
+        {
+            lava.main.ChangeValueGaussZeroControl(point, brushSize, new Vector4(brushPower * -1f, 0f, 0f, 0f));
         }
         public void AddSediment(Vector2 point)
         {
-            water.sedimentField.ChangeValueGauss(point, brushSize, brushPower / 50f, new Vector4(1f, 0f, 0f, 0f));
+            water.sedimentField.ChangeValueGauss(point, brushSize, new Vector4(brushPower / 50f, 0f, 0f, 0f));
         }
         public void RemoveSediment(Vector2 point)
         {
-            water.sedimentField.ChangeValueGaussZeroControl(point, brushSize, brushPower * -1f / 50f, new Vector4(1f, 0f, 0f, 0f));
+            water.sedimentField.ChangeValueGaussZeroControl(point, brushSize, new Vector4(brushPower * -1f / 50f, 0f, 0f, 0f));
         }
         internal void RemoveWaterSource()
         {
             waterInputAmount = 0f;
         }
+        internal void RemoveLavaSource()
+        {
+            lavaInputAmount = 0f;
+        }
         internal void MoveWaterSource(Vector2 point)
         {
-            waterInputPoint = point;
-            //m_waterInputPoint.x = point.x / (float)TEX_SIZE;
-            //m_waterInputPoint.y = point.y / (float)TEX_SIZE;
+            waterInputPoint = point;            
             waterInputRadius = brushSize;
             waterInputAmount = brushPower;
-
+        }
+        internal void MoveLavaSource(Vector2 point)
+        {
+            lavaInputPoint = point;
+            lavaInputRadius = brushSize;
+            lavaInputAmount = brushPower;
         }
         internal void RemoveWaterDrainage()
         {

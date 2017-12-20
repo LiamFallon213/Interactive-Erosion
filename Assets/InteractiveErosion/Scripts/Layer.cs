@@ -79,7 +79,7 @@ namespace InterativeErosionProject
     {
         ///<summary>Must be in 0..1 range</summary>
         private readonly float emissivity;
-        ///<summary> joule per kelvin, J/K</summary>
+        ///<summary> Joule per kelvin, J/K</summary>
         private readonly float heatCapacity;
         private static readonly float StefanBoltzmannConstant = 5.670367e-8f;
 
@@ -93,6 +93,7 @@ namespace InterativeErosionProject
             link.heatExchangeMat.SetFloat("_StefanBoltzmannConstant", StefanBoltzmannConstant);
             link.heatExchangeMat.SetFloat("_Emissivity", emissivity);
             link.heatExchangeMat.SetFloat("_HeatCapacity", heatCapacity);
+            link.heatExchangeMat.SetFloat("T", 0.1f);
             //link.heatExchangeMat.SetTexture("_OutFlowField", outFlow.READ);
 
             Graphics.Blit(main.READ, main.WRITE, link.heatExchangeMat);

@@ -18,7 +18,7 @@ namespace InterativeErosionProject
         stone,
         cobble, clay, sand,
         water, watersource, waterdrain, sediment
-        , ocean, lavatest
+        , ocean, lavatest, volcano
     }
     public class ControlPanel : Window
     {
@@ -78,6 +78,8 @@ namespace InterativeErosionProject
                                 sim.AddWater(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.watersource)
                                 sim.MoveWaterSource(selectedPoint);
+                            else if (selectedMaterial == MaterialsForEditing.volcano)
+                                sim.MoveLavaSource(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.waterdrain)
                                 sim.MoveWaterDrainage(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.ocean)
@@ -93,8 +95,12 @@ namespace InterativeErosionProject
                         {
                             if (selectedMaterial == MaterialsForEditing.water)
                                 sim.RemoveWater(selectedPoint);
+                            if (selectedMaterial == MaterialsForEditing.lavatest)
+                                sim.RemoveLava(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.watersource)
                                 sim.RemoveWaterSource();
+                            else if (selectedMaterial == MaterialsForEditing.volcano)
+                                sim.RemoveLavaSource();
                             else if (selectedMaterial == MaterialsForEditing.waterdrain)
                                 sim.RemoveWaterDrainage();
                             else if (selectedMaterial == MaterialsForEditing.ocean)

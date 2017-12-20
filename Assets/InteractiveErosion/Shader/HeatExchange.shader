@@ -21,7 +21,7 @@ Shader "Erosion/HeatExchange"
 
 		sampler _MainTex;
 	//uniform sampler2D _OutFlowField;
-	uniform float _StefanBoltzmannConstant, _Emissivity, _HeatCapacity;
+	uniform float _StefanBoltzmannConstant, _Emissivity, _HeatCapacity, T;
 
 	struct v2f
 	{
@@ -44,12 +44,15 @@ Shader "Erosion/HeatExchange"
 		if (amount > 0.0)
 		{
 			float temperature = oldValue.a;
-			float QChange = _StefanBoltzmannConstant*pow(temperature, 4)*_Emissivity *-1;
-			float temperatureChange = QChange / (_HeatCapacity);//* amount
-			oldValue.a += temperatureChange;//change only Alpha channel - temperature!
+			float QChange = _StefanBoltzmannConstant*pow(temperature, 4)*_Emissivity *-1 * T;
+			
+			{ 				
+				float temperatureChange = QChange / (_HeatCapacity * amount);//* amount
+				oldValue.a += temperatureChange;//change only Alpha channel - temperature!
+			}
 		}
 		else
-			oldValue.a = 0, 0;
+			oldValue.a = 0.0;
 		return oldValue;
 	}
 
