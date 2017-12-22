@@ -18,7 +18,7 @@ namespace InterativeErosionProject
         stone,
         cobble, clay, sand,
         water, watersource, waterdrain, sediment
-        , ocean, lavatest
+        , ocean, lavatest, volcanotest
     }
     public class ControlPanel : Window
     {
@@ -33,8 +33,8 @@ namespace InterativeErosionProject
         private Plane referencePlane = new Plane(Vector3.up, Vector3.zero);
 
         static public Vector2 selectedPoint;
-        static public Action selectedAction = Action.Info;
-        internal static MaterialsForEditing selectedMaterial = MaterialsForEditing.stone;
+        static public Action selectedAction = Action.Add;
+        internal static MaterialsForEditing selectedMaterial = MaterialsForEditing.volcanotest;
         private Vector3 lastClick;
 
         public override void Refresh()
@@ -67,7 +67,9 @@ namespace InterativeErosionProject
 
                     // lift pointer at terrain height
                     var height = sim.getTerrainLevel(selectedPoint);
-                    height *= (float)ErosionSim.TOTAL_GRID_SIZE / (float)ErosionSim.TEX_SIZE;
+                    height += sim.getLavaLevel(selectedPoint);
+                    //height *= (float)ErosionSim.TOTAL_GRID_SIZE / (float)ErosionSim.TEX_SIZE;
+                    height *= ErosionSim.terrainAmountScale;
                     height += 12f;
                     mapPointer.transform.position = new Vector3(mapPointer.transform.position.x, mapPointer.transform.position.y + height, mapPointer.transform.position.z);
                     if (Input.GetMouseButton(0))
@@ -78,6 +80,8 @@ namespace InterativeErosionProject
                                 sim.AddWater(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.watersource)
                                 sim.MoveWaterSource(selectedPoint);
+                            else if (selectedMaterial == MaterialsForEditing.volcanotest)
+                                sim.MoveLavaSource(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.waterdrain)
                                 sim.MoveWaterDrainage(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.ocean)
@@ -93,8 +97,12 @@ namespace InterativeErosionProject
                         {
                             if (selectedMaterial == MaterialsForEditing.water)
                                 sim.RemoveWater(selectedPoint);
+                            if (selectedMaterial == MaterialsForEditing.lavatest)
+                                sim.RemoveLava(selectedPoint);
                             else if (selectedMaterial == MaterialsForEditing.watersource)
                                 sim.RemoveWaterSource();
+                            else if (selectedMaterial == MaterialsForEditing.volcanotest)
+                                sim.RemoveLavaSource();
                             else if (selectedMaterial == MaterialsForEditing.waterdrain)
                                 sim.RemoveWaterDrainage();
                             else if (selectedMaterial == MaterialsForEditing.ocean)

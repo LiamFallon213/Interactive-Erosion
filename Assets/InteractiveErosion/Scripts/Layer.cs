@@ -19,19 +19,33 @@ namespace InterativeErosionProject
         [SerializeField]//readonly
         public DoubleDataTexture outFlow;
 
-        private float viscosity;
+        [SerializeField]
+        private float damping;
         protected readonly ErosionSim link;
         protected float size;
+        ///<summary> Forces absolute fluidity</summary>
+        [SerializeField]
+        private readonly float overwriteFluidity;
+        ///<summary>Fluidity coefficient</summary>
+        [SerializeField]//readonly
+        private  float fluidity;
 
-        public Layer(string name, int size, float viscosity, ErosionSim link)
+        public Layer(string name, int size, float damping, ErosionSim link,  float overwriteFluidity, float fluidity)
         {
             main = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point); // was RFloat
             main.ClearColor();
             outFlow = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point); //was ARGBHalf
             outFlow.ClearColor();
-            this.viscosity = viscosity;
+            this.damping = damping;
             this.link = link;
             this.size = size;
+
+            this.overwriteFluidity = overwriteFluidity;
+            this.fluidity = fluidity;
+        }
+        public float getFluidity()
+        {
+            return fluidity;
         }
         /// <summary>
         ///  Calculates flow of field 
@@ -40,21 +54,23 @@ namespace InterativeErosionProject
         {
             //main.SetFilterMode(FilterMode.Point);
             link.m_outFlowMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
-            link.m_outFlowMat.SetFloat("T", 0.1f);
-            link.m_outFlowMat.SetFloat("L", 1.0f);
-            link.m_outFlowMat.SetFloat("A", 1.0f);
+            link.m_outFlowMat.SetFloat("T", link.timeStep);
+            link.m_outFlowMat.SetFloat("L", link.PIPE_LENGTH);
+            link.m_outFlowMat.SetFloat("A", link.CELL_AREA);
             link.m_outFlowMat.SetFloat("G", ErosionSim.GRAVITY);
             link.m_outFlowMat.SetFloat("_Layers", 4);
-            link.m_outFlowMat.SetFloat("_Damping", viscosity);
+            link.m_outFlowMat.SetFloat("_Damping", damping);
             link.m_outFlowMat.SetTexture("_TerrainField", onWhat);
             link.m_outFlowMat.SetTexture("_Field", main.READ);
+            link.m_outFlowMat.SetFloat("_OverwriteFluidity", overwriteFluidity);
+            link.m_outFlowMat.SetFloat("_Fluidity", fluidity);            
 
             Graphics.Blit(outFlow.READ, outFlow.WRITE, link.m_outFlowMat);
 
             outFlow.Swap(); ;
 
             link.m_fieldUpdateMat.SetFloat("_TexSize", size);
-            link.m_fieldUpdateMat.SetFloat("T", 0.1f);
+            link.m_fieldUpdateMat.SetFloat("T", link.timeStep);
             link.m_fieldUpdateMat.SetFloat("L", 1f);
             link.m_fieldUpdateMat.SetTexture("_OutFlowField", outFlow.READ);
 
@@ -67,18 +83,53 @@ namespace InterativeErosionProject
             main.Destroy();
             outFlow.Destroy();
         }
-        virtual public void SetFilterMode(FilterMode mode)
+        public void SetFilterMode(FilterMode mode)
         {
             main.SetFilterMode(mode);
         }
+
+
     }
     [System.Serializable]
-    public class LayerWithVelocity : Layer
+    public class LayerWithTemperature : Layer
+    {
+        private static readonly float StefanBoltzmannConstant = 5.670367e-8f;
+
+        ///<summary>Must be in 0..1 range</summary>
+        [SerializeField]//readonly
+        private  float emissivity;
+        ///<summary> Joule per kelvin, J/K</summary>
+        [SerializeField]//readonly
+        private  float heatCapacity;
+
+       
+
+        public LayerWithTemperature(string name, int size, float damping, ErosionSim link, float emissivity
+            , float heatCapacity, float overwriteFluidity, float fluidity) : base(name, size, damping, link, overwriteFluidity, fluidity)
+        {
+            this.emissivity = Mathf.Clamp01(emissivity);
+            this.heatCapacity = heatCapacity;
+            
+        }
+        internal void HeatExchange()
+        {
+            link.heatExchangeMat.SetFloat("_StefanBoltzmannConstant", StefanBoltzmannConstant);
+            link.heatExchangeMat.SetFloat("_Emissivity", emissivity);
+            link.heatExchangeMat.SetFloat("_HeatCapacity", heatCapacity);
+            link.heatExchangeMat.SetFloat("T", link.timeStep);
+            //link.heatExchangeMat.SetTexture("_OutFlowField", outFlow.READ);
+
+            Graphics.Blit(main.READ, main.WRITE, link.heatExchangeMat);
+            main.Swap();
+        }
+    }
+    [System.Serializable]
+    public class LayerWithVelocity : LayerWithTemperature
     {
         ///<summary> Water speed (2 channels). Used for sediment movement and dissolution</summary>
         [SerializeField]
         public DoubleDataTexture velocity;
-        public LayerWithVelocity(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link)
+        public LayerWithVelocity(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link, 0.96f, 4181f, 1f, 1f)
         {
             velocity = new DoubleDataTexture("Water Velocity", size, RenderTextureFormat.ARGBFloat, FilterMode.Bilinear);// was RGHalf
             velocity.ClearColor();
@@ -141,7 +192,7 @@ namespace InterativeErosionProject
         private float depositionConstant = 0.015f;
 
         /// <summary> Terrain wouldn't dissolve if water level in cell is lower than this</summary>
-        [SerializeField]        
+        [SerializeField]
         private float dissolveLimit = 0.001f;
 
         /// <summary> How much sediment the water can carry per 1 unit of water </summary>
@@ -258,7 +309,7 @@ namespace InterativeErosionProject
         internal void SimulateErosion(DoubleDataTexture terrainField, Vector4 dissolvingConstant, float minTiltAngle, int TERRAIN_LAYERS, float TIME_STEP)
         {
             DissolveAndDeposition(terrainField, dissolvingConstant, minTiltAngle, TERRAIN_LAYERS);
-            AdvectSediment( TIME_STEP);
+            AdvectSediment(TIME_STEP);
             //AlternativeAdvectSediment();
         }
         public void SetSedimentDepositionRate(float value)

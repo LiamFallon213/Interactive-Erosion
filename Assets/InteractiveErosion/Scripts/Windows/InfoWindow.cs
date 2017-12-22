@@ -47,7 +47,14 @@ namespace InterativeErosionProject
 
             sb.Append("\nTerrain deposition(+)/dissolution(-): ").Append(sim.getDeposition(ControlPanel.selectedPoint));
 
+            sb.Append("\nLava flow: ").Append(sim.getLavaFlow(ControlPanel.selectedPoint));
+            var lavaTemperature = sim.getLavaTemperature(ControlPanel.selectedPoint);
+            sb.Append("\nLava temperature, K: ").Append(lavaTemperature);
 
+            //Should be same as in shader!!
+             var fluidity =  sim.getLavaFluidity() * Mathf.Pow(lavaTemperature, 3);
+            fluidity = Mathf.Clamp01(fluidity);
+            sb.Append("\nLava fluidity: ").Append(fluidity);
             text.text = sb.ToString();
 
         }

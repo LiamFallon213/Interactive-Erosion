@@ -26,7 +26,7 @@ namespace InterativeErosionProject
         ///<summary> Updates field according to outflow</summary>
         public Material m_fieldUpdateMat;
         public Material m_waterVelocityMat, m_diffuseVelocityMat;
-
+        public Material heatExchangeMat;
         /// <summary> Calculates angle for each cell </summary>
         public Material m_tiltAngleMat;
         ///<summary> Calculates layer erosion basing on the forces that are caused by the running water</summary>
@@ -37,9 +37,7 @@ namespace InterativeErosionProject
         public Material m_slippageHeightMat, m_slippageOutflowMat, m_slippageUpdateMat;
         public Material m_disintegrateAndDepositMat, m_applyFreeSlipMat;
         public Material moveByLiquidMat;
-
-        /// <summary> Movement speed of point of water source</summary>
-        //private float m_waterInputSpeed = 0.01f;
+                
         private Vector2 waterInputPoint = new Vector2(-1f, 1f);
         private float waterInputAmount = 0f;
         private float waterInputRadius = 0.008f;
@@ -48,10 +46,15 @@ namespace InterativeErosionProject
         private float waterDrainageAmount = 0f;
         private float waterDrainageRadius = 0.008f;
 
-
+        private Vector2 lavaInputPoint = new Vector2(-1f, 1f);
+        private float lavaInputAmount = 0f;
+        private float lavaInputRadius = 0.008f;
 
         [SerializeField]
         private int m_seed = 0;
+
+        [SerializeField]
+        public float timeStep = 0.1f;
 
         //The number of layers used in the simulation. Must be 1, 2, 3 or, 4
         private const int TERRAIN_LAYERS = 4;
@@ -64,6 +67,8 @@ namespace InterativeErosionProject
             NOISE_STYLE.FRACTAL,
             NOISE_STYLE.FRACTAL
         };
+               
+
         //This will take the abs value of the final noise is set to true
         //This will make the fractal or warped noise look different.
         //It will have no effect on turbulence or ridged noise as they are all ready abs
@@ -82,7 +87,7 @@ namespace InterativeErosionProject
 
         private Vector4 m_lacunarity = new Vector4(2.5f, 2.3f, 2.0f, 2.0f); //Rate of change of the noise amplitude. Should be between 1 and 3 for fractal noise
         private Vector4 m_gain = new Vector4(0.5f, 0.5f, 0.5f, 0.5f); //Rate of change of the noise frequency
-        static private float terrainAmountScale = 0.5f;
+        static public float terrainAmountScale = 0.5f;
         //private Vector4 m_amp = new Vector4(6.0f * terrainAmountScale, 3f * terrainAmountScale, 6f * terrainAmountScale, 0.15f * terrainAmountScale); //Amount of terrain in a layer        
         private Vector4 m_amp = new Vector4(2f * terrainAmountScale, 1f * terrainAmountScale, 2f * terrainAmountScale, 1f * terrainAmountScale); //Amount of terrain in a layer        
 
@@ -144,7 +149,7 @@ namespace InterativeErosionProject
         public int oceanWidth = 200;
 
         ///<summary> Meshes</summary>
-        private GameObject[] gridLand, gridWater, arrowsObjects, gridLava;
+        private GameObject[] gridLand, gridWater, arrowsObjects;//, gridLava;
 
         ///<summary> Contains all 4 layers in ARGB</summary>
 
@@ -160,15 +165,7 @@ namespace InterativeErosionProject
         ///<summary> Moved regolith amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB</summary>
         private DoubleDataTexture regolithOutFlow;
 
-        //[SerializeField]
-        ///<summary> Contains water amount. Can't be negative!!</summary>
-        //private DoubleDataTexture waterField;
-
-        // [SerializeField]
-        ///<summary> Moved water amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB. Keeps only positive numbers</summary>
-        //private DoubleDataTexture waterOutFlow;
-
-
+        
         /// <summary> Used for non-water erosion aka slippering of material</summary>
         [SerializeField]
         private RenderTexture slippageHeight;
@@ -181,7 +178,7 @@ namespace InterativeErosionProject
         private DoubleDataTexture magmaVelocity;
 
         [SerializeField]
-        private Layer lava;
+        private LayerWithTemperature lava;
 
         [SerializeField]
         private LayerWithErosion water;
@@ -196,13 +193,13 @@ namespace InterativeErosionProject
         //You can change this but must be a pow2 number, ie 256, 512, 1024 etc
         public const int TOTAL_GRID_SIZE = 512;  // TEX_SIZE /2;//512;//1024;
         //You can make this smaller but not larger
-        private const float TIME_STEP = 0.1f;
+        //private const float TIME_STEP = 0.1f;
 
         ///<summary>Size of 1 mesh in vertexes</summary>
         private const int GRID_SIZE = 129; // don/t change it. It allows about 33k triangles in mesh, while maximum 65k
-        private const float PIPE_LENGTH = 1.0f;
-        private const float CELL_LENGTH = 1.0f;
-        private const float CELL_AREA = 1.0f; //CELL_LENGTH*CELL_LENGTH
+        public float PIPE_LENGTH = 1.0f;
+        public  float CELL_LENGTH = 1.0f;
+        public float CELL_AREA = 1.0f; //CELL_LENGTH*CELL_LENGTH
         public const float GRAVITY = 9.81f;
 
 
@@ -220,8 +217,8 @@ namespace InterativeErosionProject
 
         private void Start()
         {
-            //lava = new Layer("Lava", TEX_SIZE, 0.02f, this);
-            lava = new Layer("Lava", TEX_SIZE, 0.1f, this);
+            //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
+            lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
 
             layersColors[0].a = 0.98f;
@@ -303,13 +300,13 @@ namespace InterativeErosionProject
 
                     m_slippageOutflowMat.SetFloat("_TexSize", (float)TEX_SIZE);
                     m_slippageOutflowMat.SetFloat("_Layers", (float)(i + 1));
-                    m_slippageOutflowMat.SetFloat("T", TIME_STEP);
+                    m_slippageOutflowMat.SetFloat("T", timeStep);
                     m_slippageOutflowMat.SetTexture("_MaxSlippageHeights", slippageHeight);
                     m_slippageOutflowMat.SetTexture("_TerrainField", terrainField.READ);
 
                     Graphics.Blit(null, slippageOutflow, m_slippageOutflowMat);
 
-                    m_slippageUpdateMat.SetFloat("T", TIME_STEP);
+                    m_slippageUpdateMat.SetFloat("T", timeStep);
                     m_slippageUpdateMat.SetFloat("_TexSize", (float)TEX_SIZE);
                     m_slippageUpdateMat.SetFloat("_Layers", (float)(i + 1));
                     m_slippageUpdateMat.SetTexture("_SlippageOutflow", slippageOutflow);
@@ -336,11 +333,11 @@ namespace InterativeErosionProject
 
 
                 if (waterInputAmount > 0f)
-                    water.main.ChangeValueGaussZeroControl(waterInputPoint, waterInputRadius, waterInputAmount, new Vector4(1f, 0f, 0f, 0f));// WaterInput();
+                    water.main.ChangeValueGauss(waterInputPoint, waterInputRadius, new Vector4(waterInputAmount, 0f, 0f, 0f));
                 if (waterDrainageAmount > 0f)
                 {
-                    water.main.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, waterDrainageAmount * -1f, new Vector4(1f, 0f, 0f, 0f));
-                    terrainField.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, waterDrainageAmount * -1f, new Vector4(0f, 0f, 0f, 1f));
+                    water.main.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, new Vector4(waterDrainageAmount * -1f, 0f, 0f, 0f));
+                    terrainField.ChangeValueGaussZeroControl(waterDrainagePoint, waterDrainageRadius, new Vector4(0f, 0f, 0f, waterDrainageAmount * -1f));
                 }
 
                 //set specified levels of water and terrain at oceans
@@ -352,14 +349,14 @@ namespace InterativeErosionProject
                 }
 
                 water.Flow(terrainField.READ);
-                water.CalcWaterVelocity(TIME_STEP);
+                water.CalcWaterVelocity(timeStep);
             }
 
 
 
             if (simulateWaterErosion)
             {
-                water.SimulateErosion(terrainField, dissolvingConstant, minTiltAngle, TERRAIN_LAYERS, TIME_STEP);
+                water.SimulateErosion(terrainField, dissolvingConstant, minTiltAngle, TERRAIN_LAYERS, timeStep);
             }
             //if (simulateRigolith)
             //{
@@ -373,6 +370,11 @@ namespace InterativeErosionProject
 
             lava.SetFilterMode(FilterMode.Point);
             lava.Flow(terrainField.READ);
+            if (lavaInputAmount > 0f)
+                //lava.main.ChangeValueGaussWithHeat(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 1500f));                
+                lava.main.ChangeValueGaussWithHeat(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 1500f));
+            if (heatExchange)
+                lava.HeatExchange();
             lava.SetFilterMode(FilterMode.Bilinear);
 
             if (simulateWaterFlow)
@@ -407,6 +409,9 @@ namespace InterativeErosionProject
                 currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
                 currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
                 currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
+
+                // currentOverlay.getMaterial().SetVector("_LavaColor", new Vector4(1f, 0f, 0f, 1f));
+                currentOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
 
                 currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
                 currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
@@ -480,12 +485,12 @@ namespace InterativeErosionProject
             m_waterMat.SetVector("_SedimentColor", new Vector4(1f - 0.808f, 1f - 0.404f, 1f - 0.00f, 1f));
 
 
-            lavaMat.SetFloat("_ScaleY", scaleY);
-            lavaMat.SetFloat("_TexSize", (float)TEX_SIZE);
-            lavaMat.SetTexture("_WaterField", lava.main.READ);
-            lavaMat.SetTexture("_Terrain", terrainField.READ);
-            lavaMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
-            lavaMat.SetVector("_SunDir", sun.transform.forward * -1.0f);
+            //lavaMat.SetFloat("_ScaleY", scaleY);
+            //lavaMat.SetFloat("_TexSize", (float)TEX_SIZE);
+            //lavaMat.SetTexture("_WaterField", lava.main.READ);
+            //lavaMat.SetTexture("_Terrain", terrainField.READ);
+            //lavaMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
+            //lavaMat.SetVector("_SunDir", sun.transform.forward * -1.0f);
 
 
             //foreach (var item in m_gridLand)
@@ -582,7 +587,7 @@ namespace InterativeErosionProject
 
                     Destroy(gridLand[idx]);
                     Destroy(gridWater[idx]);
-                    Destroy(gridLava[idx]);
+                    //Destroy(gridLava[idx]);
 
                 }
             }
@@ -595,7 +600,7 @@ namespace InterativeErosionProject
 
             gridLand = new GameObject[numGrids * numGrids];
             gridWater = new GameObject[numGrids * numGrids];
-            gridLava = new GameObject[numGrids * numGrids];
+            //gridLava = new GameObject[numGrids * numGrids];
             arrowsObjects = new GameObject[numGrids * numGrids];
 
             for (int x = 0; x < numGrids; x++)
@@ -625,13 +630,13 @@ namespace InterativeErosionProject
                     gridLand[idx].transform.SetParent(this.transform);
 
 
-                    gridLava[idx] = new GameObject("Grid Lava " + idx.ToString());
-                    gridLava[idx].AddComponent<MeshFilter>();
-                    gridLava[idx].AddComponent<MeshRenderer>();
-                    gridLava[idx].GetComponent<Renderer>().material = lavaMat;
-                    gridLava[idx].GetComponent<MeshFilter>().mesh = mesh;
-                    gridLava[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
-                    gridLava[idx].transform.SetParent(this.transform);
+                    //gridLava[idx] = new GameObject("Grid Lava " + idx.ToString());
+                    //gridLava[idx].AddComponent<MeshFilter>();
+                    //gridLava[idx].AddComponent<MeshRenderer>();
+                    //gridLava[idx].GetComponent<Renderer>().material = lavaMat;
+                    //gridLava[idx].GetComponent<MeshFilter>().mesh = mesh;
+                    //gridLava[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
+                    //gridLava[idx].transform.SetParent(this.transform);
 
                     gridWater[idx] = new GameObject("Grid Water " + idx.ToString());
                     gridWater[idx].AddComponent<MeshFilter>();
@@ -779,64 +784,75 @@ namespace InterativeErosionProject
         {
             Vector4 layerMask = default(Vector4);
             if (layer == MaterialsForEditing.stone)
-                layerMask = new Vector4(1f, 0f, 0f, 0f);
+                layerMask = new Vector4(brushPower, 0f, 0f, 0f);
             else if (layer == MaterialsForEditing.cobble)
-                layerMask = new Vector4(0f, 1f, 0f, 0f);
+                layerMask = new Vector4(0f, brushPower, 0f, 0f);
             else if (layer == MaterialsForEditing.clay)
-                layerMask = new Vector4(0f, 0f, 1f, 0f);
+                layerMask = new Vector4(0f, 0f, brushPower, 0f);
             else if (layer == MaterialsForEditing.sand)
-                layerMask = new Vector4(0f, 0f, 0f, 1f);
-            terrainField.ChangeValueGauss(point, brushSize, brushPower, layerMask);
+                layerMask = new Vector4(0f, 0f, 0f, brushPower);
+            terrainField.ChangeValueGauss(point, brushSize, layerMask);
         }
         public void RemoveFromTerrainLayer(MaterialsForEditing layer, Vector2 point)
         {
             Vector4 layerMask = default(Vector4);
             if (layer == MaterialsForEditing.stone)
             {
-                layerMask = new Vector4(1f, 0f, 0f, 0f);
-                terrainField.ChangeValueGauss(point, brushSize, brushPower * -1f, layerMask);
+                layerMask = new Vector4(brushPower * -1f, 0f, 0f, 0f);
+                terrainField.ChangeValueGauss(point, brushSize, layerMask);
                 return;
             }
             else if (layer == MaterialsForEditing.cobble)
-                layerMask = new Vector4(0f, 1f, 0f, 0f);
+                layerMask = new Vector4(0f, brushPower * -1f, 0f, 0f);
             else if (layer == MaterialsForEditing.clay)
-                layerMask = new Vector4(0f, 0f, 1f, 0f);
+                layerMask = new Vector4(0f, 0f, brushPower * -1f, 0f);
             else if (layer == MaterialsForEditing.sand)
-                layerMask = new Vector4(0f, 0f, 0f, 1f);
-            terrainField.ChangeValueGaussZeroControl(point, brushSize, brushPower * -1f, layerMask);
+                layerMask = new Vector4(0f, 0f, 0f, brushPower * -1f);
+            terrainField.ChangeValueGaussZeroControl(point, brushSize, layerMask);
         }
         public void AddWater(Vector2 point)
         {
-            water.main.ChangeValueGauss(point, brushSize, brushPower, new Vector4(1f, 0f, 0f, 0f));
+            water.main.ChangeValueGauss(point, brushSize, new Vector4(brushPower, 0f, 0f, 0f));
         }
         public void RemoveWater(Vector2 point)
         {
-            water.main.ChangeValueGaussZeroControl(point, brushSize, brushPower * -1f, new Vector4(1f, 0f, 0f, 0f));
-        }
+            water.main.ChangeValueGaussZeroControl(point, brushSize, new Vector4(brushPower * -1f, 0f, 0f, 0f));
+        }        
         internal void AddLava(Vector2 point)
         {
-            lava.main.ChangeValueGauss(point, brushSize, brushPower, new Vector4(1f, 0f, 0f, 0f));
+            lava.main.ChangeValueGaussWithHeat(point, brushSize, new Vector4(brushPower, 0f, 0f, 1500f));// 5000f));
+        }
+        public void RemoveLava(Vector2 point)
+        {
+            lava.main.ChangeValueGaussZeroControl(point, brushSize, new Vector4(brushPower * -1f, 0f, 0f, 0f));
         }
         public void AddSediment(Vector2 point)
         {
-            water.sedimentField.ChangeValueGauss(point, brushSize, brushPower / 50f, new Vector4(1f, 0f, 0f, 0f));
+            water.sedimentField.ChangeValueGauss(point, brushSize, new Vector4(brushPower / 50f, 0f, 0f, 0f));
         }
         public void RemoveSediment(Vector2 point)
         {
-            water.sedimentField.ChangeValueGaussZeroControl(point, brushSize, brushPower * -1f / 50f, new Vector4(1f, 0f, 0f, 0f));
+            water.sedimentField.ChangeValueGaussZeroControl(point, brushSize, new Vector4(brushPower * -1f / 50f, 0f, 0f, 0f));
         }
         internal void RemoveWaterSource()
         {
             waterInputAmount = 0f;
         }
+        internal void RemoveLavaSource()
+        {
+            lavaInputAmount = 0f;
+        }
         internal void MoveWaterSource(Vector2 point)
         {
-            waterInputPoint = point;
-            //m_waterInputPoint.x = point.x / (float)TEX_SIZE;
-            //m_waterInputPoint.y = point.y / (float)TEX_SIZE;
+            waterInputPoint = point;            
             waterInputRadius = brushSize;
             waterInputAmount = brushPower;
-
+        }
+        internal void MoveLavaSource(Vector2 point)
+        {
+            lavaInputPoint = point;
+            lavaInputRadius = brushSize;
+            lavaInputAmount = brushPower;
         }
         internal void RemoveWaterDrainage()
         {
@@ -882,10 +898,18 @@ namespace InterativeErosionProject
             //return getData4Float32bits(m_terrainField.READ, point);
             return terrainField.getDataRGBAFloatEF(point);
         }
-        
+
         internal Vector4 getWaterFlow(Vector2 point)
         {
             return water.outFlow.getDataRGBAFloatEF(point);
+        }
+        internal Vector4 getLavaFlow(Vector2 point)
+        {
+            return lava.outFlow.getDataRGBAFloatEF(point);
+        }
+        internal float getLavaFluidity()
+        {
+            return lava.getFluidity();
         }
         internal Vector4 getSedimentInWater(Vector2 point)
         {
@@ -894,6 +918,10 @@ namespace InterativeErosionProject
         internal float getDeposition(Vector2 point)
         {
             return water.sedimentDeposition.getDataRGBAFloatEF(point).x;
+        }
+        internal float getLavaTemperature(Vector2 point)
+        {
+            return lava.main.getDataRGBAFloatEF(point).w;
         }
         internal float getWaterLevel(Vector2 point)
         {
@@ -920,6 +948,11 @@ namespace InterativeErosionProject
         public void SetSimulateWater(bool value)
         {
             simulateWaterFlow = value;
+        }
+        private bool heatExchange = false;
+        public void SetHeatExchange(bool value)
+        {
+            heatExchange = value;
         }
         public void SetDepositionRate(float value)
         {
