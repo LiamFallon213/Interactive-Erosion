@@ -67,6 +67,8 @@ namespace InterativeErosionProject
             NOISE_STYLE.FRACTAL,
             NOISE_STYLE.FRACTAL
         };
+               
+
         //This will take the abs value of the final noise is set to true
         //This will make the fractal or warped noise look different.
         //It will have no effect on turbulence or ridged noise as they are all ready abs
@@ -85,7 +87,7 @@ namespace InterativeErosionProject
 
         private Vector4 m_lacunarity = new Vector4(2.5f, 2.3f, 2.0f, 2.0f); //Rate of change of the noise amplitude. Should be between 1 and 3 for fractal noise
         private Vector4 m_gain = new Vector4(0.5f, 0.5f, 0.5f, 0.5f); //Rate of change of the noise frequency
-        static private float terrainAmountScale = 0.5f;
+        static public float terrainAmountScale = 0.5f;
         //private Vector4 m_amp = new Vector4(6.0f * terrainAmountScale, 3f * terrainAmountScale, 6f * terrainAmountScale, 0.15f * terrainAmountScale); //Amount of terrain in a layer        
         private Vector4 m_amp = new Vector4(2f * terrainAmountScale, 1f * terrainAmountScale, 2f * terrainAmountScale, 1f * terrainAmountScale); //Amount of terrain in a layer        
 
@@ -215,8 +217,8 @@ namespace InterativeErosionProject
 
         private void Start()
         {
-            //lava = new Layer("Lava", TEX_SIZE, 0.02f, this);0.98f
-            lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f);
+            //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
+            lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
 
             layersColors[0].a = 0.98f;
@@ -369,7 +371,8 @@ namespace InterativeErosionProject
             lava.SetFilterMode(FilterMode.Point);
             lava.Flow(terrainField.READ);
             if (lavaInputAmount > 0f)
-                lava.main.ChangeValueGauss(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 5000f));
+                //lava.main.ChangeValueGaussWithHeat(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 1500f));                
+                lava.main.ChangeValueGaussWithHeat(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 1500f));
             if (heatExchange)
                 lava.HeatExchange();
             lava.SetFilterMode(FilterMode.Bilinear);
@@ -817,7 +820,7 @@ namespace InterativeErosionProject
         }        
         internal void AddLava(Vector2 point)
         {
-            lava.main.ChangeValueGauss(point, brushSize, new Vector4(brushPower, 0f, 0f, 5000f));// 5000f));
+            lava.main.ChangeValueGaussWithHeat(point, brushSize, new Vector4(brushPower, 0f, 0f, 1500f));// 5000f));
         }
         public void RemoveLava(Vector2 point)
         {
@@ -903,6 +906,10 @@ namespace InterativeErosionProject
         internal Vector4 getLavaFlow(Vector2 point)
         {
             return lava.outFlow.getDataRGBAFloatEF(point);
+        }
+        internal float getLavaFluidity()
+        {
+            return lava.getFluidity();
         }
         internal Vector4 getSedimentInWater(Vector2 point)
         {

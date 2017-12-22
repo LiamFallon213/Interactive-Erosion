@@ -18,7 +18,7 @@ namespace InterativeErosionProject
         static private Texture2D tempT2DRGBA, tempT2DRFloat;
         static private Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat,
             changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat, moveByVelocityMat,
-            scaleMat;
+            scaleMat, changeValueGaussWithHeatMat;
         ///<summary> Contains data</summary>
 
         [SerializeField]//readonly
@@ -75,6 +75,7 @@ namespace InterativeErosionProject
             setRandomValueMat = Resources.Load(path + "SetRandomValue", typeof(Material)) as Material;
             moveByVelocityMat = Resources.Load(path + "MoveByVelocity", typeof(Material)) as Material;
             scaleMat = Resources.Load(path + "Scale", typeof(Material)) as Material;
+            changeValueGaussWithHeatMat = Resources.Load(path + "ChangeValueGaussWithHeat", typeof(Material)) as Material;
         }
         public static void DestroyAll()
         {
@@ -183,7 +184,18 @@ namespace InterativeErosionProject
                 this.Swap();
             }
         }
+        public void ChangeValueGaussWithHeat(Vector2 point, float radius, Vector4 value)
+        {
+            if (value != Vector4.zero)
+            {
+                changeValueGaussWithHeatMat.SetVector("_Point", point);
+                changeValueGaussWithHeatMat.SetFloat("_Radius", radius);
+                changeValueGaussWithHeatMat.SetVector("_Value", value);
 
+                Graphics.Blit(this.READ, this.WRITE, changeValueGaussWithHeatMat);
+                this.Swap();
+            }
+        }
         public void ChangeValueGaussZeroControl(Vector2 point, float radius,  Vector4 value)
         {
             if (value != Vector4.zero)

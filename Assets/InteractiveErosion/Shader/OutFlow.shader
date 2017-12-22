@@ -18,9 +18,10 @@ Shader "Erosion/OutFlow"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			sampler2D _MainTex;
+			sampler2D _MainTex; 
 			uniform sampler2D _TerrainField, _Field;
-			uniform float _TexSize, T, L, A, G, _Layers, _Damping;
+			uniform float _TexSize, T, L, A, G, _Layers, _Damping;			
+			uniform float _OverwriteFluidity, _Fluidity;
 
 			struct v2f
 			{
@@ -65,8 +66,10 @@ Shader "Erosion/OutFlow"
 			
 
 				float ht = GetTotalHeight(tex2D(_TerrainField, IN.uv));
+				
 				float4 flow = tex2D(_MainTex, IN.uv) * _Damping;
-				float field = tex2D(_Field, IN.uv).x;
+				float4 that = tex2D(_Field, IN.uv);
+				float field = that.x;
 				ht += field;
 
 				float deltaHL;
@@ -114,14 +117,21 @@ Shader "Erosion/OutFlow"
 				float deltaHT = ht - htT - fieldT;
 				float deltaHB = ht - htB - fieldB;*/
 
+				float temperature = that.a;
+				float fluidity;
+				
+				
+				fluidity = _Fluidity * pow(temperature, 3);
+				fluidity = clamp(fluidity, 0.0, 1.0);
+				fluidity = max(fluidity, _OverwriteFluidity);
 				//new flux value is old value + delta time * area * ((gravity * delta ht) / length)
 				//max 0, no neg values
 				//left(x), right(y), top(z), bottom(w)
 
-				float flowL = max(0.0, flow.x + T * A * ((G * deltaHL) / L));
-				float flowR = max(0.0, flow.y + T * A * ((G * deltaHR) / L));
-				float flowT = max(0.0, flow.z + T * A * ((G * deltaHT) / L));
-				float flowB = max(0.0, flow.w + T * A * ((G * deltaHB) / L));
+				float flowL = max(0.0, flow.x + T * A * ((G * deltaHL) / L)* fluidity);
+				float flowR = max(0.0, flow.y + T * A * ((G * deltaHR) / L)* fluidity);
+				float flowT = max(0.0, flow.z + T * A * ((G * deltaHT) / L)* fluidity);
+				float flowB = max(0.0, flow.w + T * A * ((G * deltaHB) / L)* fluidity);
 
 				//If the sum of the outflow flux exceeds the water amount of the
 				//cell, flux value will be scaled down by a factor K to avoid negative

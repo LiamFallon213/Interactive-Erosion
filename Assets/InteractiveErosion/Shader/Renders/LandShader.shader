@@ -39,11 +39,17 @@ Shader "Erosion/LandShader"
 
 				//temperatureInKelvins = clamp(temperatureInKelvins, 1000.0, 40000.0);// / 100.0;
 				temperatureInKelvins = temperatureInKelvins / 100.0;
-								
+
 				//temperatureInKelvins = min(temperatureInKelvins, 13.0); // limit temperature from above
-				if (temperatureInKelvins < 5.47)
-					retColor = float3(0, 0, 0);
-				else
+				//if (temperatureInKelvins < 5.47)
+				
+				/*if (temperatureInKelvins < maxEmissionTemperature)
+				{				*/
+				
+
+				//retColor = float3(emission, 0, 0);
+				//}
+				//else
 				{
 				if (temperatureInKelvins <= 66.0)
 				{
@@ -64,7 +70,13 @@ Shader "Erosion/LandShader"
 				else
 					retColor.z = saturate(0.54320678911019607843 * log(temperatureInKelvins - 10.0) - 1.19625408914);
 				}
-				return retColor;// *0.8;
+				float maxEmissionTemperature = 15.0;
+				float minTemperatureToEmit = 5.0;
+
+				float emissionTemperatureInterval = maxEmissionTemperature - minTemperatureToEmit;
+				float adjustedTemperature = temperatureInKelvins - minTemperatureToEmit;
+				float emission = clamp(adjustedTemperature / emissionTemperatureInterval, 0.0, 1.0);
+				return retColor * emission ;//* 0.8
 		}
 			float GetTotalHeight(float4 texData, float lavaHeight)
 		{
@@ -110,7 +122,10 @@ Shader "Erosion/LandShader"
 			o.Albedo = lerp(o.Albedo, _LayerColor3, clamp(hts.w * 2.0, 0.0, 1.0));
 
 			float4 lava = tex2D(_Lava, IN.uv_MainTex);
-			o.Albedo = lerp(o.Albedo, _LavaColor, clamp(lava.x * 2.0, 0.0, 1.0));
+			o.Albedo = lerp(o.Albedo, _LavaColor, clamp(lava.x * 1.0, 0.0, 1.0));
+			/*if (lava.r > 0.0)
+				o.Albedo = _LavaColor;*/
+			
 
 			//if (lava.r > 0.0)
 			{

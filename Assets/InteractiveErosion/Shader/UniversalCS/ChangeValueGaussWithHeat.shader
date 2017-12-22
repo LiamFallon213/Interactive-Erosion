@@ -1,5 +1,5 @@
 //UNITY_SHADER_NO_UPGRADE
-Shader "Erosion/ChangeValueGauss"
+Shader "Erosion/ChangeValueGaussWithHeat"
 {
 	Properties
 	{
@@ -49,8 +49,16 @@ Shader "Erosion/ChangeValueGauss"
 
 		float4 changeValue = gauss * _Value;
 		float4 oldValue = tex2D(_MainTex, IN.uv);
+		float oldTemperature = oldValue.a;
+		float oldAmount = oldValue.r;
+		float newTemperature =  _Value.a;
+		float newAmount = changeValue.r;
+	
 		float4 res = oldValue + changeValue;
-		
+		if (oldAmount + newAmount > 0.0)
+			res.a = (oldTemperature * oldAmount + newTemperature * newAmount) / (oldAmount + newAmount);
+		else
+			res.a = 0.0;
 		return res;
 	}
 
