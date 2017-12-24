@@ -53,28 +53,28 @@ namespace InterativeErosionProject
         public void Flow(RenderTexture onWhat)
         {
             //main.SetFilterMode(FilterMode.Point);
-            link.m_outFlowMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
-            link.m_outFlowMat.SetFloat("T", link.timeStep);
-            link.m_outFlowMat.SetFloat("L", link.PIPE_LENGTH);
-            link.m_outFlowMat.SetFloat("A", link.CELL_AREA);
-            link.m_outFlowMat.SetFloat("G", ErosionSim.GRAVITY);
-            link.m_outFlowMat.SetFloat("_Layers", 4);
-            link.m_outFlowMat.SetFloat("_Damping", damping);
-            link.m_outFlowMat.SetTexture("_TerrainField", onWhat);
-            link.m_outFlowMat.SetTexture("_Field", main.READ);
-            link.m_outFlowMat.SetFloat("_OverwriteFluidity", overwriteFluidity);
-            link.m_outFlowMat.SetFloat("_Fluidity", fluidity);            
+            link.material.m_outFlowMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
+            link.material.m_outFlowMat.SetFloat("T", link.timeStep);
+            link.material.m_outFlowMat.SetFloat("L", link.PIPE_LENGTH);
+            link.material.m_outFlowMat.SetFloat("A", link.CELL_AREA);
+            link.material.m_outFlowMat.SetFloat("G", ErosionSim.GRAVITY);
+            link.material.m_outFlowMat.SetFloat("_Layers", 4);
+            link.material.m_outFlowMat.SetFloat("_Damping", damping);
+            link.material.m_outFlowMat.SetTexture("_TerrainField", onWhat);
+            link.material.m_outFlowMat.SetTexture("_Field", main.READ);
+            link.material.m_outFlowMat.SetFloat("_OverwriteFluidity", overwriteFluidity);
+            link.material.m_outFlowMat.SetFloat("_Fluidity", fluidity);            
 
-            Graphics.Blit(outFlow.READ, outFlow.WRITE, link.m_outFlowMat);
+            Graphics.Blit(outFlow.READ, outFlow.WRITE, link.material.m_outFlowMat);
 
             outFlow.Swap(); ;
 
-            link.m_fieldUpdateMat.SetFloat("_TexSize", size);
-            link.m_fieldUpdateMat.SetFloat("T", link.timeStep);
-            link.m_fieldUpdateMat.SetFloat("L", 1f);
-            link.m_fieldUpdateMat.SetTexture("_OutFlowField", outFlow.READ);
+            link.material.m_fieldUpdateMat.SetFloat("_TexSize", size);
+            link.material.m_fieldUpdateMat.SetFloat("T", link.timeStep);
+            link.material.m_fieldUpdateMat.SetFloat("L", 1f);
+            link.material.m_fieldUpdateMat.SetTexture("_OutFlowField", outFlow.READ);
 
-            Graphics.Blit(main.READ, main.WRITE, link.m_fieldUpdateMat);
+            Graphics.Blit(main.READ, main.WRITE, link.material.m_fieldUpdateMat);
             main.Swap();
             //main.SetFilterMode(FilterMode.Bilinear);
         }
@@ -113,13 +113,13 @@ namespace InterativeErosionProject
         }
         internal void HeatExchange()
         {
-            link.heatExchangeMat.SetFloat("_StefanBoltzmannConstant", StefanBoltzmannConstant);
-            link.heatExchangeMat.SetFloat("_Emissivity", emissivity);
-            link.heatExchangeMat.SetFloat("_HeatCapacity", heatCapacity);
-            link.heatExchangeMat.SetFloat("T", link.timeStep);
+            link.material.heatExchangeMat.SetFloat("_StefanBoltzmannConstant", StefanBoltzmannConstant);
+            link.material.heatExchangeMat.SetFloat("_Emissivity", emissivity);
+            link.material.heatExchangeMat.SetFloat("_HeatCapacity", heatCapacity);
+            link.material.heatExchangeMat.SetFloat("T", link.timeStep);
             //link.heatExchangeMat.SetTexture("_OutFlowField", outFlow.READ);
 
-            Graphics.Blit(main.READ, main.WRITE, link.heatExchangeMat);
+            Graphics.Blit(main.READ, main.WRITE, link.material.heatExchangeMat);
             main.Swap();
         }
     }
@@ -144,23 +144,23 @@ namespace InterativeErosionProject
         /// </summary>
         public void CalcWaterVelocity(float TIME_STEP)
         {
-            link.m_waterVelocityMat.SetFloat("_TexSize", size);
-            link.m_waterVelocityMat.SetFloat("L", 1f);
-            link.m_waterVelocityMat.SetTexture("_WaterField", main.READ);
-            link.m_waterVelocityMat.SetTexture("_WaterFieldOld", main.WRITE);
-            link.m_waterVelocityMat.SetTexture("_OutFlowField", outFlow.READ);
+            link.material.m_waterVelocityMat.SetFloat("_TexSize", size);
+            link.material.m_waterVelocityMat.SetFloat("L", 1f);
+            link.material.m_waterVelocityMat.SetTexture("_WaterField", main.READ);
+            link.material.m_waterVelocityMat.SetTexture("_WaterFieldOld", main.WRITE);
+            link.material.m_waterVelocityMat.SetTexture("_OutFlowField", outFlow.READ);
 
-            Graphics.Blit(null, velocity.READ, link.m_waterVelocityMat);
+            Graphics.Blit(null, velocity.READ, link.material.m_waterVelocityMat);
 
             const float viscosity = 10.5f;
             const int iterations = 2;
 
-            link.m_diffuseVelocityMat.SetFloat("_TexSize", size);
-            link.m_diffuseVelocityMat.SetFloat("_Alpha", 1f / (viscosity * TIME_STEP));// CELL_AREA == 1f
+            link.material.m_diffuseVelocityMat.SetFloat("_TexSize", size);
+            link.material.m_diffuseVelocityMat.SetFloat("_Alpha", 1f / (viscosity * TIME_STEP));// CELL_AREA == 1f
 
             for (int i = 0; i < iterations; i++)
             {
-                Graphics.Blit(velocity.READ, velocity.WRITE, link.m_diffuseVelocityMat);
+                Graphics.Blit(velocity.READ, velocity.WRITE, link.material.m_diffuseVelocityMat);
                 velocity.Swap();
             }
         }
@@ -226,27 +226,27 @@ namespace InterativeErosionProject
         /// </summary>
         private void DissolveAndDeposition(DoubleDataTexture terrainField, Vector4 dissolvingConstant, float minTiltAngle, int TERRAIN_LAYERS)
         {
-            link.m_tiltAngleMat.SetFloat("_TexSize", size);
-            link.m_tiltAngleMat.SetFloat("_Layers", TERRAIN_LAYERS);
-            link.m_tiltAngleMat.SetTexture("_TerrainField", terrainField.READ);
+            link.material.m_tiltAngleMat.SetFloat("_TexSize", size);
+            link.material.m_tiltAngleMat.SetFloat("_Layers", TERRAIN_LAYERS);
+            link.material.m_tiltAngleMat.SetTexture("_TerrainField", terrainField.READ);
 
-            Graphics.Blit(null, tiltAngle, link.m_tiltAngleMat);
+            Graphics.Blit(null, tiltAngle, link.material.m_tiltAngleMat);
 
-            link.dissolutionAndDepositionMat.SetTexture("_TerrainField", terrainField.READ);
-            link.dissolutionAndDepositionMat.SetTexture("_SedimentField", sedimentField.READ);
-            link.dissolutionAndDepositionMat.SetTexture("_VelocityField", velocity.READ);
-            link.dissolutionAndDepositionMat.SetTexture("_WaterField", main.READ);
-            link.dissolutionAndDepositionMat.SetTexture("_TiltAngle", tiltAngle);
-            link.dissolutionAndDepositionMat.SetFloat("_MinTiltAngle", minTiltAngle);
-            link.dissolutionAndDepositionMat.SetFloat("_SedimentCapacity", sedimentCapacity);
-            link.dissolutionAndDepositionMat.SetVector("_DissolvingConstant", dissolvingConstant);
-            link.dissolutionAndDepositionMat.SetFloat("_DepositionConstant", depositionConstant);
-            link.dissolutionAndDepositionMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
-            link.dissolutionAndDepositionMat.SetFloat("_DissolveLimit", dissolveLimit); //nash added it            
+            link.material.dissolutionAndDepositionMat.SetTexture("_TerrainField", terrainField.READ);
+            link.material.dissolutionAndDepositionMat.SetTexture("_SedimentField", sedimentField.READ);
+            link.material.dissolutionAndDepositionMat.SetTexture("_VelocityField", velocity.READ);
+            link.material.dissolutionAndDepositionMat.SetTexture("_WaterField", main.READ);
+            link.material.dissolutionAndDepositionMat.SetTexture("_TiltAngle", tiltAngle);
+            link.material.dissolutionAndDepositionMat.SetFloat("_MinTiltAngle", minTiltAngle);
+            link.material.dissolutionAndDepositionMat.SetFloat("_SedimentCapacity", sedimentCapacity);
+            link.material.dissolutionAndDepositionMat.SetVector("_DissolvingConstant", dissolvingConstant);
+            link.material.dissolutionAndDepositionMat.SetFloat("_DepositionConstant", depositionConstant);
+            link.material.dissolutionAndDepositionMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
+            link.material.dissolutionAndDepositionMat.SetFloat("_DissolveLimit", dissolveLimit); //nash added it            
 
             RenderTexture[] terrainAndSediment = new RenderTexture[3] { terrainField.WRITE, sedimentField.WRITE, sedimentDeposition.WRITE };
 
-            RTUtility.MultiTargetBlit(terrainAndSediment, link.dissolutionAndDepositionMat);
+            RTUtility.MultiTargetBlit(terrainAndSediment, link.material.dissolutionAndDepositionMat);
             terrainField.Swap();
             sedimentField.Swap();
             sedimentDeposition.Swap();
@@ -276,24 +276,24 @@ namespace InterativeErosionProject
         /// </summary>
         private void AdvectSediment(float TIME_STEP)
         {
-            link.m_advectSedimentMat.SetFloat("_TexSize", size);
-            link.m_advectSedimentMat.SetFloat("T", TIME_STEP);
-            link.m_advectSedimentMat.SetFloat("_VelocityFactor", 1.0f);
-            link.m_advectSedimentMat.SetTexture("_VelocityField", velocity.READ);
+            link.material.m_advectSedimentMat.SetFloat("_TexSize", size);
+            link.material.m_advectSedimentMat.SetFloat("T", TIME_STEP);
+            link.material.m_advectSedimentMat.SetFloat("_VelocityFactor", 1.0f);
+            link.material.m_advectSedimentMat.SetTexture("_VelocityField", velocity.READ);
 
             //is bug? No its no
-            Graphics.Blit(sedimentField.READ, advectSediment.READ, link.m_advectSedimentMat);
+            Graphics.Blit(sedimentField.READ, advectSediment.READ, link.material.m_advectSedimentMat);
 
-            link.m_advectSedimentMat.SetFloat("_VelocityFactor", -1.0f);
-            Graphics.Blit(advectSediment.READ, advectSediment.WRITE, link.m_advectSedimentMat);
+            link.material.m_advectSedimentMat.SetFloat("_VelocityFactor", -1.0f);
+            Graphics.Blit(advectSediment.READ, advectSediment.WRITE, link.material.m_advectSedimentMat);
 
-            link.m_processMacCormackMat.SetFloat("_TexSize", size);
-            link.m_processMacCormackMat.SetFloat("T", TIME_STEP);
-            link.m_processMacCormackMat.SetTexture("_VelocityField", velocity.READ);
-            link.m_processMacCormackMat.SetTexture("_InterField1", advectSediment.READ);
-            link.m_processMacCormackMat.SetTexture("_InterField2", advectSediment.WRITE);
+            link.material.m_processMacCormackMat.SetFloat("_TexSize", size);
+            link.material.m_processMacCormackMat.SetFloat("T", TIME_STEP);
+            link.material.m_processMacCormackMat.SetTexture("_VelocityField", velocity.READ);
+            link.material.m_processMacCormackMat.SetTexture("_InterField1", advectSediment.READ);
+            link.material.m_processMacCormackMat.SetTexture("_InterField2", advectSediment.WRITE);
 
-            Graphics.Blit(sedimentField.READ, sedimentField.WRITE, link.m_processMacCormackMat);
+            Graphics.Blit(sedimentField.READ, sedimentField.WRITE, link.material.m_processMacCormackMat);
             sedimentField.Swap();
         }
         public override void OnDestroy()

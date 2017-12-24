@@ -16,11 +16,8 @@ namespace InterativeErosionProject
         static private readonly List<DoubleDataTexture> all = new List<DoubleDataTexture>();
         static private readonly RenderTexture tempRTARGB, tempRTRFloat;
         static private Texture2D tempT2DRGBA, tempT2DRFloat;
-        static private Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat,
-            changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat, moveByVelocityMat,
-            scaleMat, changeValueGaussWithHeatMat;
+        static private readonly Materials material;
         ///<summary> Contains data</summary>
-
         [SerializeField]//readonly
         private RenderTexture[] textures = new RenderTexture[2];
 
@@ -46,7 +43,8 @@ namespace InterativeErosionProject
             tempT2DRFloat = new Texture2D(1, 1, TextureFormat.RFloat, false);
             tempT2DRFloat.wrapMode = TextureWrapMode.Clamp;
             tempT2DRFloat.filterMode = FilterMode.Point;
-            LoadMaterials();
+            //LoadMaterials();
+            material =  GameObject.Find("Materials").GetComponent<Materials>();
         }
 
         public DoubleDataTexture(string name, int size, RenderTextureFormat format, FilterMode filterMode)
@@ -63,20 +61,20 @@ namespace InterativeErosionProject
             this.size = size;
             all.Add(this);
         }
-        static private void LoadMaterials()
-        {
-            string path = "Materials/UniversalCS/";
-            setFloatValueMat = Resources.Load(path + "SetFloatValue", typeof(Material)) as Material;
-            changeValueMat = Resources.Load(path + "ChangeValue", typeof(Material)) as Material;
-            changeValueZeroControlMat = Resources.Load(path + "ChangeValueZeroControl", typeof(Material)) as Material;
-            getValueMat = Resources.Load(path + "GetValue", typeof(Material)) as Material;
-            changeValueGaussMat = Resources.Load(path + "ChangeValueGauss", typeof(Material)) as Material;
-            changeValueGaussZeroControlMat = Resources.Load(path + "ChangeValueGaussZeroControl", typeof(Material)) as Material;
-            setRandomValueMat = Resources.Load(path + "SetRandomValue", typeof(Material)) as Material;
-            moveByVelocityMat = Resources.Load(path + "MoveByVelocity", typeof(Material)) as Material;
-            scaleMat = Resources.Load(path + "Scale", typeof(Material)) as Material;
-            changeValueGaussWithHeatMat = Resources.Load(path + "ChangeValueGaussWithHeat", typeof(Material)) as Material;
-        }
+        //static private void LoadMaterials()
+        //{
+        //    string path = "Materials/UniversalCS/";
+        //    setFloatValueMat = Resources.Load(path + "SetFloatValue", typeof(Material)) as Material;
+        //    changeValueMat = Resources.Load(path + "ChangeValue", typeof(Material)) as Material;
+        //    changeValueZeroControlMat = Resources.Load(path + "ChangeValueZeroControl", typeof(Material)) as Material;
+        //    getValueMat = Resources.Load(path + "GetValue", typeof(Material)) as Material;
+        //    changeValueGaussMat = Resources.Load(path + "ChangeValueGauss", typeof(Material)) as Material;
+        //    changeValueGaussZeroControlMat = Resources.Load(path + "ChangeValueGaussZeroControl", typeof(Material)) as Material;
+        //    setRandomValueMat = Resources.Load(path + "SetRandomValue", typeof(Material)) as Material;
+        //    moveByVelocityMat = Resources.Load(path + "MoveByVelocity", typeof(Material)) as Material;
+        //    scaleMat = Resources.Load(path + "Scale", typeof(Material)) as Material;
+        //    changeValueGaussWithHeatMat = Resources.Load(path + "ChangeValueGaussWithHeat", typeof(Material)) as Material;
+        //}
         public static void DestroyAll()
         {
             foreach (var item in all)
@@ -168,19 +166,19 @@ namespace InterativeErosionProject
         public void SetValue(Vector4 value, Rect rect)
         {
             Graphics.Blit(this.READ, this.WRITE);
-            setFloatValueMat.SetVector("_Value", value);
-            RTUtility.Blit(this.READ, this.WRITE, setFloatValueMat, rect, 0, false);
+            material.setFloatValueMat.SetVector("_Value", value);
+            RTUtility.Blit(this.READ, this.WRITE, material.setFloatValueMat, rect, 0, false);
             this.Swap();
         }
         public void ChangeValueGauss(Vector2 point, float radius, Vector4 value)
         {
             if (value != Vector4.zero)
             {
-                changeValueGaussMat.SetVector("_Point", point);
-                changeValueGaussMat.SetFloat("_Radius", radius);
-                changeValueGaussMat.SetVector("_Value", value);
+                material.changeValueGaussMat.SetVector("_Point", point);
+                material.changeValueGaussMat.SetFloat("_Radius", radius);
+                material.changeValueGaussMat.SetVector("_Value", value);
 
-                Graphics.Blit(this.READ, this.WRITE, changeValueGaussMat);
+                Graphics.Blit(this.READ, this.WRITE, material.changeValueGaussMat);
                 this.Swap();
             }
         }
@@ -188,11 +186,11 @@ namespace InterativeErosionProject
         {
             if (value != Vector4.zero)
             {
-                changeValueGaussWithHeatMat.SetVector("_Point", point);
-                changeValueGaussWithHeatMat.SetFloat("_Radius", radius);
-                changeValueGaussWithHeatMat.SetVector("_Value", value);
+                material.changeValueGaussWithHeatMat.SetVector("_Point", point);
+                material.changeValueGaussWithHeatMat.SetFloat("_Radius", radius);
+                material.changeValueGaussWithHeatMat.SetVector("_Value", value);
 
-                Graphics.Blit(this.READ, this.WRITE, changeValueGaussWithHeatMat);
+                Graphics.Blit(this.READ, this.WRITE, material.changeValueGaussWithHeatMat);
                 this.Swap();
             }
         }
@@ -200,26 +198,26 @@ namespace InterativeErosionProject
         {
             if (value != Vector4.zero)
             {
-                changeValueGaussZeroControlMat.SetVector("_Point", point);
-                changeValueGaussZeroControlMat.SetFloat("_Radius", radius);                
-                changeValueGaussZeroControlMat.SetVector("_Value", value);
+                material.changeValueGaussZeroControlMat.SetVector("_Point", point);
+                material.changeValueGaussZeroControlMat.SetFloat("_Radius", radius);
+                material.changeValueGaussZeroControlMat.SetVector("_Value", value);
 
-                Graphics.Blit(this.READ, this.WRITE, changeValueGaussZeroControlMat);
+                Graphics.Blit(this.READ, this.WRITE, material.changeValueGaussZeroControlMat);
                 this.Swap();
             }
         }
         public void ChangeValue(Vector4 value, Rect rect)
         {
             Graphics.Blit(this.READ, this.WRITE); // don't know why but need it
-            changeValueMat.SetVector("_Value", value);
-            RTUtility.Blit(this.READ, this.WRITE, changeValueMat, rect, 0, false);
+            material.changeValueMat.SetVector("_Value", value);
+            RTUtility.Blit(this.READ, this.WRITE, material.changeValueMat, rect, 0, false);
             this.Swap();
         }
         public void ChangeValueZeroControl(float value)
         {
             //Graphics.Blit(this.READ, this.WRITE); // don't know why but need it
-            changeValueZeroControlMat.SetFloat("_Value", value);
-            Graphics.Blit(this.READ, this.WRITE, changeValueZeroControlMat);
+            material.changeValueZeroControlMat.SetFloat("_Value", value);
+            Graphics.Blit(this.READ, this.WRITE, material.changeValueZeroControlMat);
             this.Swap();
         }
 
@@ -256,9 +254,9 @@ namespace InterativeErosionProject
 
         internal void SetRandomValue(Vector4 limits, int chance)
         {
-            setRandomValueMat.SetVector("_Limits", limits);
-            setRandomValueMat.SetInt("_Chance", chance);
-            Graphics.Blit(this.READ, this.WRITE, setRandomValueMat);
+            material.setRandomValueMat.SetVector("_Limits", limits);
+            material.setRandomValueMat.SetInt("_Chance", chance);
+            Graphics.Blit(this.READ, this.WRITE, material.setRandomValueMat);
             this.Swap();
         }
 
@@ -284,19 +282,19 @@ namespace InterativeErosionProject
             //shader.Dispatch(kernelHandle, this.size / 8, this.size / 8, 1);
 
             ///this.Swap();
-            moveByVelocityMat.SetFloat("T", T);
-            moveByVelocityMat.SetFloat("_Coefficient", coefficient);
-            moveByVelocityMat.SetFloat("_TexSize", (float)size);
-            moveByVelocityMat.SetFloat("_Limit", limit);
-            moveByVelocityMat.SetTexture("_Velocity", velocity);
-            Graphics.Blit(this.READ, this.WRITE, moveByVelocityMat);
+            material.moveByVelocityMat.SetFloat("T", T);
+            material.moveByVelocityMat.SetFloat("_Coefficient", coefficient);
+            material.moveByVelocityMat.SetFloat("_TexSize", (float)size);
+            material.moveByVelocityMat.SetFloat("_Limit", limit);
+            material.moveByVelocityMat.SetTexture("_Velocity", velocity);
+            Graphics.Blit(this.READ, this.WRITE, material.moveByVelocityMat);
             this.Swap();
         }
 
         internal void Scale(float value)
         {
-            scaleMat.SetFloat("_Value", value);
-            Graphics.Blit(this.READ, this.WRITE, scaleMat);
+            material.scaleMat.SetFloat("_Value", value);
+            Graphics.Blit(this.READ, this.WRITE, material.scaleMat);
             this.Swap();
         }
     }
