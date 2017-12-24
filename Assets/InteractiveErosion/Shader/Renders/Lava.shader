@@ -92,7 +92,7 @@ Shader "Erosion/Lava"
 
 		float3 N = FindNormal(IN.uv_MainTex, 1.0 / _TexSize);
 
-		float3 V = normalize(_WorldSpaceCameraPos - IN.worldPos).xzy;
+		//float3 V = normalize(_WorldSpaceCameraPos - IN.worldPos).xzy;
 
 		
 

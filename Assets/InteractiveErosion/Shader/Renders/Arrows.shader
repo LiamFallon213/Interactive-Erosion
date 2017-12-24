@@ -28,8 +28,7 @@ Shader "Erosion/ArrowsShader"
 
 		struct Input
 		{
-			float2 uv_MainTex;
-			//uint vertexId : SV_VertexID;
+			float2 uv_MainTex;			
 		};
 		struct vInput {
 			float4 vertex : POSITION;

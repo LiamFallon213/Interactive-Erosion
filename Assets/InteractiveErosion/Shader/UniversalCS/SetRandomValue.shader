@@ -56,7 +56,8 @@ Shader "Erosion/SetRandomValue"
 				}
 
 				// Returns the current random int.
-				int GetCurrentInt() {
+				int GetCurrentInt()
+				{
 					Cycle();
 					return seed;
 				}

@@ -55,6 +55,10 @@ namespace InterativeErosionProject
              var fluidity =  sim.getLavaFluidity() * Mathf.Pow(lavaTemperature, 3);
             fluidity = Mathf.Clamp01(fluidity);
             sb.Append("\nLava fluidity: ").Append(fluidity);
+
+            sb.Append("\nAtmosphere temperature, K: ").Append(sim.getAtmosphereTemperature(ControlPanel.selectedPoint));
+            sb.Append("\nVapor in atmosphere: ").Append(sim.getVaporInAtmosphere(ControlPanel.selectedPoint));
+
             text.text = sb.ToString();
 
         }

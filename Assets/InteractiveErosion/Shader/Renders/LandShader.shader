@@ -12,7 +12,7 @@ Shader "Erosion/LandShader"
 	}
 		SubShader
 		{
-			Tags { "RenderType" = "Opaque" }
+			Tags { "RenderType" = "Transparent" }
 			LOD 200
 
 			CGPROGRAM

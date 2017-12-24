@@ -6,7 +6,7 @@ public class Materials : MonoBehaviour
 {
     public ComputeShader shader;
     ///<summary> Used for rendering</summary>
-    public Material m_landMat, m_waterMat, arrowsMat, lavaMat;
+    public Material landRender, m_waterMat, arrowsMat, lavaMat, atmosphereRender;
     ///<summary> Used for rendering</summary>
     //public Material[] overlays;
 
@@ -25,6 +25,9 @@ public class Materials : MonoBehaviour
     public Material m_advectSedimentMat;
     public Material m_slippageHeightMat, m_slippageOutflowMat, m_slippageUpdateMat;
     public Material m_disintegrateAndDepositMat, m_applyFreeSlipMat;
+
+    ///<summary> Evaporate from layer to atmosphere</summary>
+    public Material evaporate;
 
 
     // from DoubleDataTexture
