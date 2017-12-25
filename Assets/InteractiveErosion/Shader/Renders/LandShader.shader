@@ -113,7 +113,7 @@ Shader "Erosion/LandShader"
 
 		void surf(Input IN, inout SurfaceOutput o)
 		{
-			float3 n = FindNormal(IN.uv_MainTex, 1.0 / _TexSize);
+			
 
 			float4 hts = tex2D(_MainTex, IN.uv_MainTex);
 
@@ -133,8 +133,8 @@ Shader "Erosion/LandShader"
 				o.Emission = light;
 			}
 
-			o.Alpha = 1.0;
-			o.Normal = n;
+			o.Alpha = 1.0;			
+			o.Normal = FindNormal(IN.uv_MainTex, 1.0 / _TexSize);
 
 		}
 

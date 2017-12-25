@@ -208,7 +208,7 @@ namespace InterativeErosionProject
             //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
             lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
-            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f);
+            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 2f);
 
             layersColors[0].a = 0.98f;
             layersColors[1].a = 0.98f;
@@ -323,7 +323,7 @@ namespace InterativeErosionProject
                 {
                     materials.rainFromAtmosphere.SetTexture("_MainTex", water.main.READ);
                     materials.rainFromAtmosphere.SetTexture("_Atmosphere", atmosphere.main.READ);
-                    materials.rainFromAtmosphere.SetFloat("_MaxVapor", 2f);
+                    materials.rainFromAtmosphere.SetFloat("_MaxVapor", atmosphere.vaporCapacity);
 
                     RenderTexture[] waterAndAtmosphere = new RenderTexture[3] { water.main.WRITE, atmosphere.main.WRITE, rain };
 
@@ -498,6 +498,7 @@ namespace InterativeErosionProject
             materials.atmosphereRender.SetTexture("_MainTex", atmosphere.main.READ);
             materials.atmosphereRender.SetFloat("_ScaleY", scaleY);
             materials.atmosphereRender.SetFloat("_AtmoHeight", atmosphere.getHeight());
+            materials.atmosphereRender.SetFloat("_TexSize", (float)TEX_SIZE);
 
 
 

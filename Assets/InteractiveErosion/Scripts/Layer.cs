@@ -325,16 +325,21 @@ namespace InterativeErosionProject
     [System.Serializable]
     public class LayerAtmosphere : LayerWithTemperature
     {
+        ///<summary>Drawing height</summary>
         [SerializeField]
-        private float height;        
+        private float height;
+        [SerializeField]
+        public float vaporCapacity;
         public LayerAtmosphere(string name, int size, float damping, ErosionSim link, float emissivity,
-            float heatCapacity, float overwriteFluidity, float fluidity, float height) : base(name, size, damping, link, emissivity, heatCapacity, overwriteFluidity, fluidity)
+            float heatCapacity, float overwriteFluidity, float fluidity, float height, float vaporCapacity) : base(name, size, damping, link, emissivity, heatCapacity, overwriteFluidity, fluidity)
         {
             this.height = height;
+            this.vaporCapacity = vaporCapacity;
         }
         public float getHeight()
         {
             return height;
         }
+        
     }
 }
