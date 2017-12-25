@@ -50,9 +50,10 @@ namespace InterativeErosionProject
         /// <summary>
         ///  Calculates flow of field 
         /// </summary>
-        public void Flow(RenderTexture onWhat)
+        public void Flow(RenderTexture onWhat, float direction)
         {
             //main.SetFilterMode(FilterMode.Point);
+            link.materials.m_outFlowMat.SetFloat("_Direction", direction);
             link.materials.m_outFlowMat.SetFloat("_TexSize", (float)ErosionSim.TEX_SIZE);
             link.materials.m_outFlowMat.SetFloat("T", link.timeStep);
             link.materials.m_outFlowMat.SetFloat("L", link.PIPE_LENGTH);
@@ -129,7 +130,7 @@ namespace InterativeErosionProject
         ///<summary> Water speed (2 channels). Used for sediment movement and dissolution</summary>
         [SerializeField]
         public DoubleDataTexture velocity;
-        public LayerWithVelocity(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link, 0.96f, 4181f, 1f, 1f)
+        public LayerWithVelocity(string name, int size, float damping, ErosionSim link) : base(name, size, damping, link, 0.96f, 4181f, 1f, 1f)
         {
             velocity = new DoubleDataTexture("Water Velocity", size, RenderTextureFormat.ARGBFloat, FilterMode.Bilinear);// was RGHalf
             velocity.ClearColor();
@@ -199,7 +200,7 @@ namespace InterativeErosionProject
         [SerializeField]
         private float sedimentCapacity = 0.2f;
 
-        public LayerWithErosion(string name, int size, float viscosity, ErosionSim link) : base(name, size, viscosity, link)
+        public LayerWithErosion(string name, int size, float damping, ErosionSim link) : base(name, size, damping, link)
         {
             //waterField = new DoubleDataTexture("Water Field", TEX_SIZE, RenderTextureFormat.RFloat, FilterMode.Point);
             //waterOutFlow = new DoubleDataTexture("Water outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);

@@ -21,7 +21,7 @@ Shader "Erosion/OutFlow"
 			sampler2D _MainTex; 
 			uniform sampler2D _TerrainField, _Field;
 			uniform float _TexSize, T, L, A, G, _Layers, _Damping;			
-			uniform float _OverwriteFluidity, _Fluidity;
+			uniform float _OverwriteFluidity, _Fluidity, _Direction;
 
 			struct v2f
 			{
@@ -41,7 +41,7 @@ Shader "Erosion/OutFlow"
 			{
 				float4 maskVec = float4(_Layers, _Layers - 1, _Layers - 2, _Layers - 3);
 				float4 addVec = min(float4(1,1,1,1),max(float4(0,0,0,0), maskVec));
-				return dot(texData, addVec);
+				return dot(texData, addVec) * _Direction;
 			}
 			bool CoordsExist(float2 coord)
 			{

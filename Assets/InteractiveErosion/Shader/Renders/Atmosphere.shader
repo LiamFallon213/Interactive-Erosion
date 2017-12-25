@@ -5,6 +5,7 @@ Shader "Erosion/Atmosphere"
 	{
 		_MainTex("Base (RGB)", 2D) = "white" {}
 		_MaxVaporForBlackColor("MaxVaporForBlackColor", Float) = 0.1
+		_MinVaporToShow("MinVaporToShow", Float) = 5
 	}
 	SubShader 
 	{
@@ -18,7 +19,7 @@ Shader "Erosion/Atmosphere"
 		#pragma glsl
 				
 		sampler2D _MainTex;
-		uniform float _AtmoHeight, _ScaleY, _MaxVaporForBlackColor;
+		uniform float _AtmoHeight, _ScaleY, _MaxVaporForBlackColor, _MinVaporToShow;
 		
 		struct Input 
 		{
@@ -55,11 +56,10 @@ Shader "Erosion/Atmosphere"
 			float vapor = tex2D(_MainTex, IN.uv_MainTex).x;
 			half3 color = 1.0 - clamp(vapor / _MaxVaporForBlackColor, 0.0, 1.0);
 			 
-			color *= 3;
-			//color += 0.2;
-			//o.Albedo = 1.0-vapor / _MaxVaporForBlackColor;
-			o.Albedo = color;
-			if (vapor < 18)
+			color *= 5;
+			//color += 0.2;			
+			o.Albedo = color;			
+			if (vapor < _MinVaporToShow)
 				discard;
 			o.Alpha = 1.0;
 			//float3 n = FindNormal(IN.uv_MainTex, 1.0 / _TexSize);

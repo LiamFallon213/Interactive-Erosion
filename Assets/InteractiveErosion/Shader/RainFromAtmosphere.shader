@@ -1,5 +1,5 @@
 
-Shader "Erosion/EvaporateToAtmosphere"
+Shader "Erosion/RainFromAtmosphere"
 {
 	//UNITY_SHADER_NO_UPGRADE
 	Properties
@@ -11,7 +11,7 @@ Shader "Erosion/EvaporateToAtmosphere"
 	{
 		Pass
 		{
-			ZTest Always Cull Off ZWrite Off  
+			ZTest Always Cull Off ZWrite Off
 			Fog{ Mode off }
 
 			CGPROGRAM
@@ -21,7 +21,7 @@ Shader "Erosion/EvaporateToAtmosphere"
 			#pragma fragment frag
 
 			uniform sampler2D _MainTex, _Atmosphere;
-			float _Value;
+			float _MaxVapor;
 
 			struct v2f
 			{
@@ -30,8 +30,12 @@ Shader "Erosion/EvaporateToAtmosphere"
 			};
 			struct f2a
 			{
+				//evaporated field newValue
 				float4 col0 : COLOR0;
+				//atmosphere field
 				float4 col1 : COLOR1;				
+				// rain amount
+				float4 col2 : COLOR2;
 			};
 			v2f vert(appdata_base v)
 			{
@@ -43,21 +47,21 @@ Shader "Erosion/EvaporateToAtmosphere"
 
 			f2a frag(v2f IN) : COLOR
 			{
-				float4 oldValue = tex2D(_MainTex, IN.uv);
-								
-				float newValue = oldValue.x + _Value; 
-				newValue = max(newValue, 0.0); 
-
-				float change = oldValue.x - newValue;
 				float4 atmospehere = tex2D(_Atmosphere, IN.uv);
+								
+				float rain = atmospehere.x - _MaxVapor;
+				rain = max(rain, 0.0);//always positive
+				
+				float4 oldLiquid = tex2D(_MainTex, IN.uv);  
 
 				f2a OUT;
+				
 				//evaporated field newValue
-				OUT.col0 = float4(newValue, oldValue.y, oldValue.z, oldValue.w);
-				
+				OUT.col0 = float4(oldLiquid.x + rain, oldLiquid.y, oldLiquid.z, oldLiquid.w);
 				//atmosphere field
-				OUT.col1 = float4(atmospehere.x + change, atmospehere.y, atmospehere.z, atmospehere.w);
-				
+				OUT.col1 = float4(atmospehere.x - rain, atmospehere.y, atmospehere.z, atmospehere.w);
+				//rain field
+				OUT.col2 = float4(rain, 0, 0, 0);
 				return OUT;
 			}
 

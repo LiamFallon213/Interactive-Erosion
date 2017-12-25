@@ -25,6 +25,7 @@ public class Materials : MonoBehaviour
     public Material m_advectSedimentMat;
     public Material m_slippageHeightMat, m_slippageOutflowMat, m_slippageUpdateMat;
     public Material m_disintegrateAndDepositMat, m_applyFreeSlipMat;
+    public Material rainFromAtmosphere;
 
     ///<summary> Evaporate from layer to atmosphere</summary>
     public Material evaporate;

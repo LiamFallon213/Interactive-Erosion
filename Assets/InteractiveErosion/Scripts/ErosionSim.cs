@@ -160,6 +160,9 @@ namespace InterativeErosionProject
         private DoubleDataTexture magmaVelocity;
 
         [SerializeField]
+        private RenderTexture rain;
+
+        [SerializeField]
         private LayerWithTemperature lava;
 
         [SerializeField]
@@ -205,7 +208,7 @@ namespace InterativeErosionProject
             //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
             lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
-            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 60f);
+            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f);
 
             layersColors[0].a = 0.98f;
             layersColors[1].a = 0.98f;
@@ -218,9 +221,6 @@ namespace InterativeErosionProject
             regolithDamping = Mathf.Clamp01(regolithDamping);
 
             float u = 1.0f / (float)TEX_SIZE;
-
-
-
 
             InitLayers();
             MakeGrids();
@@ -241,6 +241,8 @@ namespace InterativeErosionProject
             slippageOutflow = DoubleDataTexture.Create("Slippage Outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);// was ARGBHalf
 
             magmaVelocity = new DoubleDataTexture("Magma Velocity", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf          
+            rain = DoubleDataTexture.Create("Rain", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf          
+
         }
 
 
@@ -313,11 +315,22 @@ namespace InterativeErosionProject
             if (simulateWaterFlow)
             {
                 // add rain
+                //if (rainInputAmount > 0.0f)
+                //{
+                //    water.main.ChangeValue(new Vector4(rainInputAmount, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
+                //}
                 if (rainInputAmount > 0.0f)
                 {
-                    water.main.ChangeValue(new Vector4(rainInputAmount, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
-                }
+                    materials.rainFromAtmosphere.SetTexture("_MainTex", water.main.READ);
+                    materials.rainFromAtmosphere.SetTexture("_Atmosphere", atmosphere.main.READ);
+                    materials.rainFromAtmosphere.SetFloat("_MaxVapor", 2f);
 
+                    RenderTexture[] waterAndAtmosphere = new RenderTexture[3] { water.main.WRITE, atmosphere.main.WRITE, rain };
+
+                    RTUtility.MultiTargetBlit(waterAndAtmosphere, materials.rainFromAtmosphere);
+                    water.main.Swap();
+                    atmosphere.main.Swap();
+                }
 
                 if (waterInputAmount > 0f)
                     water.main.ChangeValueGauss(waterInputPoint, waterInputRadius, new Vector4(waterInputAmount, 0f, 0f, 0f));
@@ -335,10 +348,10 @@ namespace InterativeErosionProject
                     terrainField.SetValue(new Vector4(oceanDestroySedimentsLevel, 0f, 0f, 0f), rect);
                 }
 
-                water.Flow(terrainField.READ);
+                water.Flow(terrainField.READ, 1f);
                 water.CalcWaterVelocity(timeStep);
 
-                atmosphere.Flow(terrainField.READ);
+                atmosphere.Flow(terrainField.READ, -1f);
             }
 
 
@@ -358,7 +371,7 @@ namespace InterativeErosionProject
                 ApplySlippage();
 
             lava.SetFilterMode(FilterMode.Point);
-            lava.Flow(terrainField.READ);
+            lava.Flow(terrainField.READ, 1f);
             if (lavaInputAmount > 0f)
                 //lava.main.ChangeValueGaussWithHeat(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 1500f));                
                 lava.main.ChangeValueGaussWithHeat(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 1500f));
