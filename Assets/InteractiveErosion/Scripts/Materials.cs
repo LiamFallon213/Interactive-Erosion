@@ -6,7 +6,7 @@ public class Materials : MonoBehaviour
 {
     public ComputeShader shader;
     ///<summary> Used for rendering</summary>
-    public Material landRender, m_waterMat, arrowsMat, lavaMat, atmosphereRender;
+    public Material landRender, m_waterMat, arrowsMat, lavaMat, atmosphereRender, atmosphereRenderDownSide;
     ///<summary> Used for rendering</summary>
     //public Material[] overlays;
 
@@ -35,4 +35,5 @@ public class Materials : MonoBehaviour
     public Material setFloatValueMat, changeValueMat, changeValueZeroControlMat, getValueMat,
         changeValueGaussMat, changeValueGaussZeroControlMat, setRandomValueMat, moveByVelocityMat,
         scaleMat, changeValueGaussWithHeatMat;
+    
 }

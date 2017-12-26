@@ -131,7 +131,7 @@ namespace InterativeErosionProject
         public int oceanWidth = 200;
 
         ///<summary> Meshes</summary>
-        private GameObject[] gridLand, gridWater, arrowsObjects, gridAtmosphere;//, gridLava;
+        private GameObject[] gridLand, gridWater, arrowsObjects, gridAtmosphere, gridAtmosphereDown;//, gridLava;
 
         ///<summary> Contains all 4 layers in ARGB</summary>
 
@@ -208,7 +208,7 @@ namespace InterativeErosionProject
             //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
             lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
-            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 2f);
+            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 8f);
 
             layersColors[0].a = 0.98f;
             layersColors[1].a = 0.98f;
@@ -500,7 +500,10 @@ namespace InterativeErosionProject
             materials.atmosphereRender.SetFloat("_AtmoHeight", atmosphere.getHeight());
             materials.atmosphereRender.SetFloat("_TexSize", (float)TEX_SIZE);
 
-
+            materials.atmosphereRenderDownSide.SetTexture("_MainTex", atmosphere.main.READ);
+            materials.atmosphereRenderDownSide.SetFloat("_ScaleY", scaleY);
+            materials.atmosphereRenderDownSide.SetFloat("_AtmoHeight", atmosphere.getHeight());
+            materials.atmosphereRenderDownSide.SetFloat("_TexSize", (float)TEX_SIZE);
 
             //lavaMat.SetFloat("_ScaleY", scaleY);
             //lavaMat.SetFloat("_TexSize", (float)TEX_SIZE);
@@ -606,6 +609,7 @@ namespace InterativeErosionProject
                     Destroy(gridLand[idx]);
                     Destroy(gridWater[idx]);
                     Destroy(gridAtmosphere[idx]);
+                    Destroy(gridAtmosphereDown[idx]);
                     //Destroy(gridLava[idx]);
 
                 }
@@ -620,6 +624,7 @@ namespace InterativeErosionProject
             gridLand = new GameObject[numGrids * numGrids];
             gridWater = new GameObject[numGrids * numGrids];
             gridAtmosphere = new GameObject[numGrids * numGrids];
+            gridAtmosphereDown= new GameObject[numGrids * numGrids];
             //gridLava = new GameObject[numGrids * numGrids];
             arrowsObjects = new GameObject[numGrids * numGrids];
 
@@ -633,7 +638,7 @@ namespace InterativeErosionProject
                     int posY = y * (GRID_SIZE - 1);
 
 
-                    Mesh mesh = MakeGridMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY);
+                    Mesh mesh = MakeGridMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY, false);
 
                     mesh.bounds = new Bounds(new Vector3(GRID_SIZE / 2, 0, GRID_SIZE / 2), new Vector3(GRID_SIZE, TERRAIN_HEIGHT * 2, GRID_SIZE));
 
@@ -674,6 +679,17 @@ namespace InterativeErosionProject
                     gridAtmosphere[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
                     gridAtmosphere[idx].transform.SetParent(this.transform);
 
+                    gridAtmosphereDown[idx] = new GameObject("grid Atmosphere downside " + idx.ToString());
+                    gridAtmosphereDown[idx].AddComponent<MeshFilter>();
+                    gridAtmosphereDown[idx].AddComponent<MeshRenderer>();
+                    gridAtmosphereDown[idx].GetComponent<Renderer>().material = materials.atmosphereRenderDownSide;
+
+                    var downMesh = MakeGridMesh(GRID_SIZE, TOTAL_GRID_SIZE, posX, posY, true);
+                    downMesh.bounds = new Bounds(new Vector3(GRID_SIZE / 2, 0, GRID_SIZE / 2), new Vector3(GRID_SIZE, TERRAIN_HEIGHT * 2, GRID_SIZE));
+                    gridAtmosphereDown[idx].GetComponent<MeshFilter>().mesh = downMesh;
+                    gridAtmosphereDown[idx].transform.localPosition = new Vector3(-TOTAL_GRID_SIZE / 2 + posX, 0, -TOTAL_GRID_SIZE / 2 + posY);
+                    gridAtmosphereDown[idx].transform.SetParent(this.transform);
+
 
 
                     arrowsObjects[idx] = new GameObject("Arrows " + idx.ToString());
@@ -689,7 +705,7 @@ namespace InterativeErosionProject
                 item.SetActive(false);
         }
 
-        private Mesh MakeGridMesh(int size, int totalSize, int posX, int posY)
+        private Mesh MakeGridMesh(int size, int totalSize, int posX, int posY, bool useRevertVertexOrder)
         {
 
             Vector3[] vertices = new Vector3[size * size];
@@ -716,13 +732,27 @@ namespace InterativeErosionProject
             {
                 for (int y = 0; y < size - 1; y++)
                 {
-                    indices[num++] = x + y * size;
-                    indices[num++] = x + (y + 1) * size;
-                    indices[num++] = (x + 1) + y * size;
+                    if (!useRevertVertexOrder)
+                    {
+                        indices[num++] = x + y * size;
+                        indices[num++] = x + (y + 1) * size;
+                        indices[num++] = (x + 1) + y * size;
 
-                    indices[num++] = x + (y + 1) * size;
-                    indices[num++] = (x + 1) + (y + 1) * size;
-                    indices[num++] = (x + 1) + y * size;
+                        indices[num++] = x + (y + 1) * size;
+                        indices[num++] = (x + 1) + (y + 1) * size;
+                        indices[num++] = (x + 1) + y * size;
+                    }
+                    else
+                    {
+                        indices[num++] = (x + 1) + y * size;
+                        indices[num++] = x + (y + 1) * size;                        
+                        indices[num++] = x + y * size;
+
+
+                        indices[num++] = (x + 1) + y * size;
+                        indices[num++] = (x + 1) + (y + 1) * size;
+                        indices[num++] = x + (y + 1) * size;                        
+                    }
                 }
             }
 
@@ -1009,7 +1039,10 @@ namespace InterativeErosionProject
         }
         public void SetAtmospereVisability(bool value)
         {
-            foreach (var item in gridAtmosphere)
+            
+            foreach (var item in gridAtmosphere)             
+                item.GetComponent<Renderer>().enabled = value;
+            foreach (var item in gridAtmosphereDown)
                 item.GetComponent<Renderer>().enabled = value;
         }
         private bool simulateRigolith;

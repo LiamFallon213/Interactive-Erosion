@@ -1,5 +1,5 @@
 
-Shader "Erosion/Atmosphere"
+Shader "Erosion/AtmosphereDownSide"
 {
 	Properties
 	{
@@ -26,6 +26,7 @@ Shader "Erosion/Atmosphere"
 			struct Input
 			{
 				float2 uv_MainTex;
+				float3 worldPos;
 			};
 
 
@@ -34,9 +35,9 @@ Shader "Erosion/Atmosphere"
 			{
 				v.tangent = float4(1,0,0,1);
 				float height = tex2Dlod(_MainTex, float4(v.texcoord.xy, 0.0, 0.0));
-				if (height < _MinVaporToShow +3)
+				if (height < _MinVaporToShow + 3)
 					height = -0.0;
-				v.vertex.y += _AtmoHeight * _ScaleY + height*_ScaleCloudsHeight;
+				v.vertex.y += _AtmoHeight * _ScaleY - height*_ScaleCloudsHeight;
 			}
 
 			float3 FindNormal(float2 uv, float u)
@@ -66,6 +67,7 @@ Shader "Erosion/Atmosphere"
 				o.Alpha = 1.0;
 				float3 n = FindNormal(IN.uv_MainTex, 1.0 / _TexSize);
 				o.Normal = n;
+
 			}
 			ENDCG
 		}
