@@ -10,7 +10,7 @@ Shader "Erosion/Atmosphere"
 	}
 		SubShader
 		{
-			Tags { "RenderType" = "Transparent" }
+			Tags { "RenderType" = "Opaque" }
 			LOD 200
 			//Cull Off
 

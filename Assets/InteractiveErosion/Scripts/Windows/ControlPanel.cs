@@ -17,8 +17,7 @@ namespace InterativeErosionProject
     {
         stone,
         cobble, clay, sand,
-        water, watersource, waterdrain, sediment
-        , ocean, lavatest, volcanotest
+        water, watersource, waterdrain, sediment, ocean, lavatest, volcanotest
     }
     public class ControlPanel : Window
     {

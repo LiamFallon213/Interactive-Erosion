@@ -12,7 +12,7 @@ Shader "Erosion/LandShader"
 	}
 		SubShader
 		{
-			Tags { "RenderType" = "Transparent" }
+			Tags { "RenderType" = "Opaque" }
 			LOD 200
 
 			CGPROGRAM
@@ -42,10 +42,10 @@ Shader "Erosion/LandShader"
 
 				//temperatureInKelvins = min(temperatureInKelvins, 13.0); // limit temperature from above
 				//if (temperatureInKelvins < 5.47)
-				
+
 				/*if (temperatureInKelvins < maxEmissionTemperature)
 				{				*/
-				
+
 
 				//retColor = float3(emission, 0, 0);
 				//}
@@ -76,9 +76,9 @@ Shader "Erosion/LandShader"
 				float emissionTemperatureInterval = maxEmissionTemperature - minTemperatureToEmit;
 				float adjustedTemperature = temperatureInKelvins - minTemperatureToEmit;
 				float emission = clamp(adjustedTemperature / emissionTemperatureInterval, 0.0, 1.0);
-				return retColor * emission ;//* 0.8
+				return retColor * emission;//* 0.8
 		}
-			float GetTotalHeight(float4 texData, float lavaHeight)
+		float GetTotalHeight(float4 texData, float lavaHeight)
 		{
 			float4 maskVec = float4(_Layers, _Layers - 1, _Layers - 2, _Layers - 3);
 			float4 addVec = min(float4(1, 1, 1, 1), max(float4(0, 0, 0, 0), maskVec));
@@ -113,8 +113,6 @@ Shader "Erosion/LandShader"
 
 		void surf(Input IN, inout SurfaceOutput o)
 		{
-			
-
 			float4 hts = tex2D(_MainTex, IN.uv_MainTex);
 
 			o.Albedo = lerp(_LayerColor0, _LayerColor1, clamp(hts.y * 2.0, 0.0, 1.0));
@@ -125,22 +123,19 @@ Shader "Erosion/LandShader"
 			o.Albedo = lerp(o.Albedo, _LavaColor, clamp(lava.x * 1.0, 0.0, 1.0));
 			/*if (lava.r > 0.0)
 				o.Albedo = _LavaColor;*/
-			
 
-			//if (lava.r > 0.0)
-			{
-				fixed3 light = ColorTemperatureToRGB(lava.a);
-				o.Emission = light;
+
+				//if (lava.r > 0.0)
+				{
+					fixed3 light = ColorTemperatureToRGB(lava.a);
+					o.Emission = light;
+				}
+
+				o.Alpha = 1.0;
+				o.Normal = FindNormal(IN.uv_MainTex, 1.0 / _TexSize);
+
 			}
-
-			o.Alpha = 1.0;			
-			o.Normal = FindNormal(IN.uv_MainTex, 1.0 / _TexSize);
-
+			ENDCG
 		}
-
-
-
-		ENDCG
-		}
-			FallBack "Diffuse"
+		FallBack "Diffuse"
 }

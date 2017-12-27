@@ -324,7 +324,10 @@ namespace InterativeErosionProject
     }
     [System.Serializable]
     public class LayerAtmosphere : LayerWithTemperature
+
     {
+        [SerializeField]
+        private RenderTexture rain;
         ///<summary>Drawing height</summary>
         [SerializeField]
         private float height;
@@ -335,11 +338,16 @@ namespace InterativeErosionProject
         {
             this.height = height;
             this.vaporCapacity = vaporCapacity;
+            rain = DoubleDataTexture.Create("Rain", size, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf          
         }
         public float getHeight()
         {
             return height;
         }
-        
+
+        internal RenderTexture getRain()
+        {
+            return rain;
+        }
     }
 }

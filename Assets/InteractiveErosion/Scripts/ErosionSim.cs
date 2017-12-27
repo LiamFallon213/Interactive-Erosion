@@ -160,9 +160,6 @@ namespace InterativeErosionProject
         private DoubleDataTexture magmaVelocity;
 
         [SerializeField]
-        private RenderTexture rain;
-
-        [SerializeField]
         private LayerWithTemperature lava;
 
         [SerializeField]
@@ -182,6 +179,9 @@ namespace InterativeErosionProject
         public const int TOTAL_GRID_SIZE = 512;  // TEX_SIZE /2;//512;//1024;
         //You can make this smaller but not larger
         //private const float TIME_STEP = 0.1f;
+        //if the size of the mesh does not match the size of the texture 
+        //the y axis needs to be scaled 
+        private float scaleY = (float)TOTAL_GRID_SIZE / (float)TEX_SIZE;
 
         ///<summary>Size of 1 mesh in vertexes</summary>
         private const int GRID_SIZE = 129; // don/t change it. It allows about 33k triangles in mesh, while maximum 65k
@@ -196,11 +196,12 @@ namespace InterativeErosionProject
         //private readonly
         [SerializeField]
         private List<WorldSide> oceans = new List<WorldSide>();
-        private readonly Color[] layersColors = new Color[4] {
+        private readonly Color[] layersColors = new Color[5] {
             new Vector4(123,125,152,155).normalized,
             new Vector4(91f, 91f, 99f, 355f).normalized,
             new Vector4(113,52,21,355).normalized,
-            new Vector4(157,156,0, 255).normalized };
+            new Vector4(157,156,0, 255).normalized,
+            new Vector4(91f, 91f, 99f, 355f).normalized};
 
 
         private void Start()
@@ -230,22 +231,13 @@ namespace InterativeErosionProject
         private void InitLayers()
         {
             terrainField = new DoubleDataTexture("Terrain Height Field", TEX_SIZE, RenderTextureFormat.ARGBFloat, FilterMode.Point);
-
-
-            regolithField = new DoubleDataTexture("Regolith Field", TEX_SIZE, RenderTextureFormat.RFloat, FilterMode.Point);
-            regolithOutFlow = new DoubleDataTexture("Regolith outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);
-
-
+            //regolithField = new DoubleDataTexture("Regolith Field", TEX_SIZE, RenderTextureFormat.RFloat, FilterMode.Point);
+            //regolithOutFlow = new DoubleDataTexture("Regolith outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);
 
             slippageHeight = DoubleDataTexture.Create("Slippage Height", TEX_SIZE, RenderTextureFormat.RHalf, FilterMode.Point);// was RHalf
             slippageOutflow = DoubleDataTexture.Create("Slippage Outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);// was ARGBHalf
-
-            magmaVelocity = new DoubleDataTexture("Magma Velocity", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf          
-            rain = DoubleDataTexture.Create("Rain", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf          
-
+            magmaVelocity = new DoubleDataTexture("Magma Velocity", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf                     
         }
-
-
 
         /// <summary>
         /// Transfers ground to regolith basing on water level, regolith level, max_regolith
@@ -325,7 +317,7 @@ namespace InterativeErosionProject
                     materials.rainFromAtmosphere.SetTexture("_Atmosphere", atmosphere.main.READ);
                     materials.rainFromAtmosphere.SetFloat("_MaxVapor", atmosphere.vaporCapacity);
 
-                    RenderTexture[] waterAndAtmosphere = new RenderTexture[3] { water.main.WRITE, atmosphere.main.WRITE, rain };
+                    RenderTexture[] waterAndAtmosphere = new RenderTexture[3] { water.main.WRITE, atmosphere.main.WRITE, atmosphere.getRain() };
 
                     RTUtility.MultiTargetBlit(waterAndAtmosphere, materials.rainFromAtmosphere);
                     water.main.Swap();
@@ -407,56 +399,42 @@ namespace InterativeErosionProject
             Simulate();
             UpdateMesh();
         }
+        private void SendDefaultLandShaderData()
+        {
+            currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
+            currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
+            currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
+            currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
+            currentOverlay.getMaterial().SetVector("_LavaColor", layersColors[4]);
+            
+
+            currentOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
+            currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
+            currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
+            currentOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
+            currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
+        }
         private void UpdateMesh()
         {
             // updating meshes
-            //if the size of the mesh does not match the size of the texture 
-            //the y axis needs to be scaled 
-            float scaleY = (float)TOTAL_GRID_SIZE / (float)TEX_SIZE;
 
             if (currentOverlay == Overlay.Default)
             {
-                currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
-                currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
-                currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
-                currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
-
-                // currentOverlay.getMaterial().SetVector("_LavaColor", new Vector4(1f, 0f, 0f, 1f));
-                currentOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
-
-                currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
-                currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
-                currentOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
-                currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
+                SendDefaultLandShaderData();
             }
             else if (currentOverlay == Overlay.Deposition)
             {
-                currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
-                currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
-                currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
-                currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
-
-                currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
-                currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
-                currentOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
+                SendDefaultLandShaderData();
                 currentOverlay.getMaterial().SetTexture("_SedimentDepositionField", water.sedimentDeposition.READ);
-                currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
             }
             else if (currentOverlay == Overlay.Dissolution)
             {
-                currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
-                currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
-                currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
-                currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
-
-                currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
-                currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
-                currentOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
+                SendDefaultLandShaderData();
                 currentOverlay.getMaterial().SetTexture("_SedimentDepositionField", water.sedimentDeposition.READ);
-                currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
             }
             else if (currentOverlay == Overlay.WaterVelocity)
             {
+                //SendDefaultLandShaderData();
                 materials.arrowsMat.SetFloat("_ScaleY", scaleY);
                 materials.arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
                 materials.arrowsMat.SetTexture("_Terrain", terrainField.READ);
@@ -475,6 +453,7 @@ namespace InterativeErosionProject
             }
             else if (currentOverlay == Overlay.PlatesVelocity)
             {
+                //SendDefaultLandShaderData();
                 materials.arrowsMat.SetFloat("_ScaleY", scaleY);
                 materials.arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
                 materials.arrowsMat.SetTexture("_Terrain", terrainField.READ);
@@ -482,6 +461,11 @@ namespace InterativeErosionProject
                 materials.arrowsMat.SetTexture("_WaterVelocity", magmaVelocity.READ);
                 materials.arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
                 materials.arrowsMat.SetFloat("_Width", 0.03f);
+            }
+            else if (currentOverlay == Overlay.Rain)
+            {
+                SendDefaultLandShaderData();
+                currentOverlay.getMaterial().SetTexture("_Rain", atmosphere.getRain());
             }
 
             materials.m_waterMat.SetTexture("_SedimentField", water.sedimentField.READ);
@@ -512,25 +496,13 @@ namespace InterativeErosionProject
             //lavaMat.SetFloat("_Layers", (float)TERRAIN_LAYERS);
             //lavaMat.SetVector("_SunDir", sun.transform.forward * -1.0f);
 
-
-            //foreach (var item in m_gridLand)
-            //{
-            //    item.GetComponent<MeshCollider>().sharedMesh = item.GetComponent<MeshFilter>().mesh;
-            //}            
         }
         private void InitMaps()
         {
             terrainField.ClearColor();
-            //waterOutFlow.ClearColor();
-            //waterVelocity.ClearColor();
-            //advectSediment.ClearColor();
-            //waterField.ClearColor();
-            //sedimentField.ClearColor();
             regolithField.ClearColor();
             regolithOutFlow.ClearColor();
-            //sedimentDeposition.ClearColor();
             magmaVelocity.ClearColor();
-
 
 
             DoubleDataTexture noiseTex;
@@ -624,7 +596,7 @@ namespace InterativeErosionProject
             gridLand = new GameObject[numGrids * numGrids];
             gridWater = new GameObject[numGrids * numGrids];
             gridAtmosphere = new GameObject[numGrids * numGrids];
-            gridAtmosphereDown= new GameObject[numGrids * numGrids];
+            gridAtmosphereDown = new GameObject[numGrids * numGrids];
             //gridLava = new GameObject[numGrids * numGrids];
             arrowsObjects = new GameObject[numGrids * numGrids];
 
@@ -745,13 +717,13 @@ namespace InterativeErosionProject
                     else
                     {
                         indices[num++] = (x + 1) + y * size;
-                        indices[num++] = x + (y + 1) * size;                        
+                        indices[num++] = x + (y + 1) * size;
                         indices[num++] = x + y * size;
 
 
                         indices[num++] = (x + 1) + y * size;
                         indices[num++] = (x + 1) + (y + 1) * size;
-                        indices[num++] = x + (y + 1) * size;                        
+                        indices[num++] = x + (y + 1) * size;
                     }
                 }
             }
@@ -1039,8 +1011,8 @@ namespace InterativeErosionProject
         }
         public void SetAtmospereVisability(bool value)
         {
-            
-            foreach (var item in gridAtmosphere)             
+
+            foreach (var item in gridAtmosphere)
                 item.GetComponent<Renderer>().enabled = value;
             foreach (var item in gridAtmosphereDown)
                 item.GetComponent<Renderer>().enabled = value;
@@ -1115,10 +1087,9 @@ namespace InterativeErosionProject
                 foreach (var item in arrowsObjects)
                     item.SetActive(false);
                 foreach (var item in gridLand)
-                {
                     item.GetComponent<Renderer>().material = currentOverlay.getMaterial();
-                }
             }
         }
+
     }
 }
