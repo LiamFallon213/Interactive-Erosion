@@ -28,9 +28,9 @@ namespace InterativeErosionProject
         private readonly float overwriteFluidity;
         ///<summary>Fluidity coefficient</summary>
         [SerializeField]//readonly
-        private  float fluidity;
+        private float fluidity;
 
-        public Layer(string name, int size, float damping, ErosionSim link,  float overwriteFluidity, float fluidity)
+        public Layer(string name, int size, float damping, ErosionSim link, float overwriteFluidity, float fluidity)
         {
             main = new DoubleDataTexture(name, size, RenderTextureFormat.ARGBFloat, FilterMode.Point); // was RFloat
             main.ClearColor();
@@ -64,7 +64,7 @@ namespace InterativeErosionProject
             link.materials.m_outFlowMat.SetTexture("_TerrainField", onWhat);
             link.materials.m_outFlowMat.SetTexture("_Field", main.READ);
             link.materials.m_outFlowMat.SetFloat("_OverwriteFluidity", overwriteFluidity);
-            link.materials.m_outFlowMat.SetFloat("_Fluidity", fluidity);            
+            link.materials.m_outFlowMat.SetFloat("_Fluidity", fluidity);
 
             Graphics.Blit(outFlow.READ, outFlow.WRITE, link.materials.m_outFlowMat);
 
@@ -98,19 +98,19 @@ namespace InterativeErosionProject
 
         ///<summary>Must be in 0..1 range</summary>
         [SerializeField]//readonly
-        private  float emissivity;
+        private float emissivity;
         ///<summary> Joule per kelvin, J/K</summary>
         [SerializeField]//readonly
-        private  float heatCapacity;
+        private float heatCapacity;
 
-       
+
 
         public LayerWithTemperature(string name, int size, float damping, ErosionSim link, float emissivity
             , float heatCapacity, float overwriteFluidity, float fluidity) : base(name, size, damping, link, overwriteFluidity, fluidity)
         {
             this.emissivity = Mathf.Clamp01(emissivity);
             this.heatCapacity = heatCapacity;
-            
+
         }
         internal void HeatExchange()
         {
@@ -324,15 +324,19 @@ namespace InterativeErosionProject
     }
     [System.Serializable]
     public class LayerAtmosphere : LayerWithTemperature
-
     {
         [SerializeField]
         private RenderTexture rain;
+
         ///<summary>Drawing height</summary>
         [SerializeField]
         private float height;
+
+        ///<summary>1 km of vapor with 30c </summary>
         [SerializeField]
-        public float vaporCapacity;
+        private float vaporCapacity;
+        
+
         public LayerAtmosphere(string name, int size, float damping, ErosionSim link, float emissivity,
             float heatCapacity, float overwriteFluidity, float fluidity, float height, float vaporCapacity) : base(name, size, damping, link, emissivity, heatCapacity, overwriteFluidity, fluidity)
         {
@@ -340,7 +344,7 @@ namespace InterativeErosionProject
             this.vaporCapacity = vaporCapacity;
             rain = DoubleDataTexture.Create("Rain", size, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);// was RGHalf          
         }
-        public float getHeight()
+        public float getBasicHeight()
         {
             return height;
         }
@@ -348,6 +352,24 @@ namespace InterativeErosionProject
         internal RenderTexture getRain()
         {
             return rain;
+        }
+
+        internal void Rain(Layer water, Layer lava, RenderTexture terrain)
+        {
+            link.materials.rainFromAtmosphere.SetTexture("_MainTex", water.main.READ);
+            link.materials.rainFromAtmosphere.SetTexture("_Lava", lava.main.READ);
+            link.materials.rainFromAtmosphere.SetTexture("_Terrain", terrain);
+            link.materials.rainFromAtmosphere.SetTexture("_Atmosphere", main.READ);
+                        
+            link.materials.rainFromAtmosphere.SetFloat("_CondensationConst", vaporCapacity);
+            link.materials.rainFromAtmosphere.SetFloat("_Layers", (float)ErosionSim.TERRAIN_LAYERS);
+            link.materials.rainFromAtmosphere.SetFloat("_AtmoHeight", getBasicHeight());
+
+            RenderTexture[] waterAndAtmosphere = new RenderTexture[3] { water.main.WRITE, main.WRITE, getRain() };
+
+            RTUtility.MultiTargetBlit(waterAndAtmosphere, link.materials.rainFromAtmosphere);
+            water.main.Swap();
+            main.Swap();
         }
     }
 }

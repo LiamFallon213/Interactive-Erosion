@@ -39,7 +39,7 @@ namespace InterativeErosionProject
         public float timeStep = 0.1f;
 
         //The number of layers used in the simulation. Must be 1, 2, 3 or, 4
-        private const int TERRAIN_LAYERS = 4;
+        public const int TERRAIN_LAYERS = 4;
 
         //This will allow you to set a noise style for each terrain layer
         private NOISE_STYLE[] m_layerStyle = new NOISE_STYLE[]
@@ -209,7 +209,7 @@ namespace InterativeErosionProject
             //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
             lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
-            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 8f);
+            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 0.003298697f * 3f);
 
             layersColors[0].a = 0.98f;
             layersColors[1].a = 0.98f;
@@ -313,15 +313,8 @@ namespace InterativeErosionProject
                 //}
                 if (rainInputAmount > 0.0f)
                 {
-                    materials.rainFromAtmosphere.SetTexture("_MainTex", water.main.READ);
-                    materials.rainFromAtmosphere.SetTexture("_Atmosphere", atmosphere.main.READ);
-                    materials.rainFromAtmosphere.SetFloat("_MaxVapor", atmosphere.vaporCapacity);
-
-                    RenderTexture[] waterAndAtmosphere = new RenderTexture[3] { water.main.WRITE, atmosphere.main.WRITE, atmosphere.getRain() };
-
-                    RTUtility.MultiTargetBlit(waterAndAtmosphere, materials.rainFromAtmosphere);
-                    water.main.Swap();
-                    atmosphere.main.Swap();
+                    atmosphere.Rain(water,lava, terrainField.READ);
+                    
                 }
 
                 if (waterInputAmount > 0f)
@@ -481,12 +474,12 @@ namespace InterativeErosionProject
 
             materials.atmosphereRender.SetTexture("_MainTex", atmosphere.main.READ);
             materials.atmosphereRender.SetFloat("_ScaleY", scaleY);
-            materials.atmosphereRender.SetFloat("_AtmoHeight", atmosphere.getHeight());
+            materials.atmosphereRender.SetFloat("_AtmoHeight", atmosphere.getBasicHeight());
             materials.atmosphereRender.SetFloat("_TexSize", (float)TEX_SIZE);
 
             materials.atmosphereRenderDownSide.SetTexture("_MainTex", atmosphere.main.READ);
             materials.atmosphereRenderDownSide.SetFloat("_ScaleY", scaleY);
-            materials.atmosphereRenderDownSide.SetFloat("_AtmoHeight", atmosphere.getHeight());
+            materials.atmosphereRenderDownSide.SetFloat("_AtmoHeight", atmosphere.getBasicHeight());
             materials.atmosphereRenderDownSide.SetFloat("_TexSize", (float)TEX_SIZE);
 
             //lavaMat.SetFloat("_ScaleY", scaleY);

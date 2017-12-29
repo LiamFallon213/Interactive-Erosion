@@ -125,7 +125,7 @@ Shader "Erosion/LandShader"
 		float rain = tex2D(_Rain, IN.uv_MainTex).x;
 		//half3 color = half3(0, 1, 0);
 		//o.Albedo = lerp(o.Albedo, color, clamp(rain* 2.0, 0.0, 1.0));
-		o.Albedo.g += rain*10;
+		o.Albedo.r += rain*10;
 
 		/*if (lava.r > 0.0)
 		o.Albedo = _LavaColor;*/

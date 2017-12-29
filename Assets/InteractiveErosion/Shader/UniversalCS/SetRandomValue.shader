@@ -20,7 +20,7 @@ Shader "Erosion/SetRandomValue"
 			#pragma target 3.0
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma enable_d3d11_debug_symbols
+			//#pragma enable_d3d11_debug_symbols
 
 			sampler2D _MainTex;
 			uniform float4 _Limits;
