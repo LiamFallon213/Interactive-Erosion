@@ -33,7 +33,7 @@ namespace InterativeErosionProject
 
         static public Vector2 selectedPoint;
         static public Action selectedAction = Action.Add;
-        internal static MaterialsForEditing selectedMaterial = MaterialsForEditing.volcanotest;
+        internal static MaterialsForEditing selectedMaterial = MaterialsForEditing.water;
         private Vector3 lastClick;
 
         public override void Refresh()

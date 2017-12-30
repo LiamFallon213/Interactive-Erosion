@@ -335,8 +335,9 @@ namespace InterativeErosionProject
         ///<summary>1 km of vapor with 30c </summary>
         [SerializeField]
         private float vaporCapacity;
-        
 
+        [SerializeField]
+        private float evaporationConstant = 0.000003f;
         public LayerAtmosphere(string name, int size, float damping, ErosionSim link, float emissivity,
             float heatCapacity, float overwriteFluidity, float fluidity, float height, float vaporCapacity) : base(name, size, damping, link, emissivity, heatCapacity, overwriteFluidity, fluidity)
         {
@@ -356,6 +357,7 @@ namespace InterativeErosionProject
 
         internal void Rain(Layer water, Layer lava, RenderTexture terrain)
         {
+            //    water.main.ChangeValue(new Vector4(rainInputAmount, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
             link.materials.rainFromAtmosphere.SetTexture("_MainTex", water.main.READ);
             link.materials.rainFromAtmosphere.SetTexture("_Lava", lava.main.READ);
             link.materials.rainFromAtmosphere.SetTexture("_Terrain", terrain);
@@ -365,11 +367,29 @@ namespace InterativeErosionProject
             link.materials.rainFromAtmosphere.SetFloat("_Layers", (float)ErosionSim.TERRAIN_LAYERS);
             link.materials.rainFromAtmosphere.SetFloat("_AtmoHeight", getBasicHeight());
 
-            RenderTexture[] waterAndAtmosphere = new RenderTexture[3] { water.main.WRITE, main.WRITE, getRain() };
+            RenderTexture[] waterAndAtmosphere = new RenderTexture[3] { water.main.WRITE, this.main.WRITE, getRain() };
 
             RTUtility.MultiTargetBlit(waterAndAtmosphere, link.materials.rainFromAtmosphere);
             water.main.Swap();
-            main.Swap();
+            this.main.Swap();
+        }
+
+        internal void Evaporate(Layer water, Layer lava, RenderTexture terrain)
+        {
+            //water.main.ChangeValueZeroControl(evaporationConstant * -1f);
+            link.materials.evaporate.SetTexture("_MainTex", water.main.READ);
+            link.materials.evaporate.SetTexture("_Lava", lava.main.READ);
+            link.materials.evaporate.SetTexture("_Terrain", terrain);
+            link.materials.evaporate.SetTexture("_Atmosphere", main.READ);
+            link.materials.evaporate.SetFloat("_EvaporateConstant", evaporationConstant);
+            link.materials.evaporate.SetFloat("_Layers", (float)ErosionSim.TERRAIN_LAYERS);
+            link.materials.evaporate.SetFloat("_AtmoHeight", getBasicHeight());
+
+            RenderTexture[] waterAndAtmosphere = new RenderTexture[2] { water.main.WRITE, this.main.WRITE };
+
+            RTUtility.MultiTargetBlit(waterAndAtmosphere, link.materials.evaporate);
+            water.main.Swap();
+            this.main.Swap();
         }
     }
 }

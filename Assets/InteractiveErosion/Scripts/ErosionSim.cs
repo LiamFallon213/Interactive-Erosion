@@ -209,7 +209,7 @@ namespace InterativeErosionProject
             //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
             lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
             water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
-            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 0.003298697f * 3f);
+            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 0.003298697f );
 
             layersColors[0].a = 0.98f;
             layersColors[1].a = 0.98f;
@@ -307,10 +307,7 @@ namespace InterativeErosionProject
             if (simulateWaterFlow)
             {
                 // add rain
-                //if (rainInputAmount > 0.0f)
-                //{
-                //    water.main.ChangeValue(new Vector4(rainInputAmount, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
-                //}
+                
                 if (rainInputAmount > 0.0f)
                 {
                     atmosphere.Rain(water,lava, terrainField.READ);
@@ -369,16 +366,8 @@ namespace InterativeErosionProject
                 /// Evaporate water everywhere 
                 if (evaporationConstant > 0.0f)
                 {
-                    //water.main.ChangeValueZeroControl(evaporationConstant * -1f);
-                    materials.evaporate.SetTexture("_MainTex", water.main.READ);
-                    materials.evaporate.SetTexture("_Atmosphere", atmosphere.main.READ);
-                    materials.evaporate.SetFloat("_Value", evaporationConstant * -1f);
-
-                    RenderTexture[] waterAndAtmosphere = new RenderTexture[2] { water.main.WRITE, atmosphere.main.WRITE };
-
-                    RTUtility.MultiTargetBlit(waterAndAtmosphere, materials.evaporate);
-                    water.main.Swap();
-                    atmosphere.main.Swap();
+                    atmosphere.Evaporate(water, lava, terrainField.READ);
+                    
                 }
             }
 
