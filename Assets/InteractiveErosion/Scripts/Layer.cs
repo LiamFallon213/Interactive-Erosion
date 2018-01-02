@@ -72,7 +72,7 @@ namespace InterativeErosionProject
 
             link.materials.m_fieldUpdateMat.SetFloat("_TexSize", size);
             link.materials.m_fieldUpdateMat.SetFloat("T", link.timeStep);
-            link.materials.m_fieldUpdateMat.SetFloat("L", 1f);
+            link.materials.m_fieldUpdateMat.SetFloat("L", link.PIPE_LENGTH);
             link.materials.m_fieldUpdateMat.SetTexture("_OutFlowField", outFlow.READ);
 
             Graphics.Blit(main.READ, main.WRITE, link.materials.m_fieldUpdateMat);
@@ -130,9 +130,10 @@ namespace InterativeErosionProject
         ///<summary> Water speed (2 channels). Used for sediment movement and dissolution</summary>
         [SerializeField]
         public DoubleDataTexture velocity;
-        public LayerWithVelocity(string name, int size, float damping, ErosionSim link) : base(name, size, damping, link, 0.96f, 4181f, 1f, 1f)
+        public LayerWithVelocity(string name, int size, float damping, ErosionSim link, float emissivity,
+            float heatCapacity, float overwriteFluidity, float fluidity) : base(name, size, damping, link, emissivity, heatCapacity, overwriteFluidity, fluidity)
         {
-            velocity = new DoubleDataTexture("Water Velocity", size, RenderTextureFormat.ARGBFloat, FilterMode.Bilinear);// was RGHalf
+            velocity = new DoubleDataTexture("Velocity", size, RenderTextureFormat.ARGBFloat, FilterMode.Bilinear);// was RGHalf
             velocity.ClearColor();
         }
         public override void OnDestroy()
@@ -146,7 +147,7 @@ namespace InterativeErosionProject
         public void CalcWaterVelocity(float TIME_STEP)
         {
             link.materials.m_waterVelocityMat.SetFloat("_TexSize", size);
-            link.materials.m_waterVelocityMat.SetFloat("L", 1f);
+            link.materials.m_waterVelocityMat.SetFloat("L", link.PIPE_LENGTH);
             link.materials.m_waterVelocityMat.SetTexture("_WaterField", main.READ);
             link.materials.m_waterVelocityMat.SetTexture("_WaterFieldOld", main.WRITE);
             link.materials.m_waterVelocityMat.SetTexture("_OutFlowField", outFlow.READ);
@@ -200,7 +201,8 @@ namespace InterativeErosionProject
         [SerializeField]
         private float sedimentCapacity = 0.2f;
 
-        public LayerWithErosion(string name, int size, float damping, ErosionSim link) : base(name, size, damping, link)
+        public LayerWithErosion(string name, int size, float damping, ErosionSim link, float emissivity,
+            float heatCapacity, float overwriteFluidity, float fluidity) : base(name, size, damping, link, emissivity, heatCapacity, overwriteFluidity, fluidity)
         {
             //waterField = new DoubleDataTexture("Water Field", TEX_SIZE, RenderTextureFormat.RFloat, FilterMode.Point);
             //waterOutFlow = new DoubleDataTexture("Water outflow", TEX_SIZE, RenderTextureFormat.ARGBHalf, FilterMode.Point);
@@ -323,7 +325,7 @@ namespace InterativeErosionProject
         }
     }
     [System.Serializable]
-    public class LayerAtmosphere : LayerWithTemperature
+    public class LayerAtmosphere : LayerWithVelocity
     {
         [SerializeField]
         private RenderTexture rain;
@@ -362,7 +364,7 @@ namespace InterativeErosionProject
             link.materials.rainFromAtmosphere.SetTexture("_Lava", lava.main.READ);
             link.materials.rainFromAtmosphere.SetTexture("_Terrain", terrain);
             link.materials.rainFromAtmosphere.SetTexture("_Atmosphere", main.READ);
-                        
+
             link.materials.rainFromAtmosphere.SetFloat("_CondensationConst", vaporCapacity);
             link.materials.rainFromAtmosphere.SetFloat("_Layers", (float)ErosionSim.TERRAIN_LAYERS);
             link.materials.rainFromAtmosphere.SetFloat("_AtmoHeight", getBasicHeight());
@@ -390,6 +392,12 @@ namespace InterativeErosionProject
             RTUtility.MultiTargetBlit(waterAndAtmosphere, link.materials.evaporate);
             water.main.Swap();
             this.main.Swap();
+        }
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+            UnityEngine.Object.Destroy(rain);
+
         }
     }
 }

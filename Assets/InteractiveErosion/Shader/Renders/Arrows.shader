@@ -6,6 +6,7 @@ Shader "Erosion/ArrowsShader"
 		_Color("Color", Color) = (1,1,1,1)
 		_LengthMultiplier("LengthMultiplier", float) = 1
 		_Width("Width", float) = 1
+		_AddHeight("_AddHeight", float) = 1
 		_Terrain("_Terrain", 2D) = "white" {}
 		_Water("_Water", 2D) = "white" {}
 		_WaterVelocity("_WaterVelocity", 2D) = "white" {}
@@ -24,7 +25,7 @@ Shader "Erosion/ArrowsShader"
 		sampler2D _Terrain, _Water, _WaterVelocity;
 		float3 _Color;
 		uniform float _LengthMultiplier, _Width;
-		uniform float _ScaleY, _TexSize;
+		uniform float _ScaleY, _AddHeight;
 
 		struct Input
 		{
@@ -75,12 +76,12 @@ Shader "Erosion/ArrowsShader"
 				newPosition.x = velocity.z;
 				newPosition.y = 0.0;
 				newPosition.z = velocity.x*-1.0;
-				newPosition *= _Width;
+				newPosition *= _Width; 
 			}
 
 
 			v.vertex.x += newPosition.x;
-			v.vertex.y += GetTotalHeight(v.texcoord.xy) * _ScaleY + 0.5; //GetTotalHeight(tex2Dlod(_Terrain, float4(v.texcoord.xy, 0.0, 0.0))) * _ScaleY;
+			v.vertex.y += GetTotalHeight(v.texcoord.xy) * _ScaleY + _AddHeight; //GetTotalHeight(tex2Dlod(_Terrain, float4(v.texcoord.xy, 0.0, 0.0))) * _ScaleY;
 			//			
 			v.vertex.z += newPosition.z;
 		}

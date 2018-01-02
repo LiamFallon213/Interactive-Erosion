@@ -181,6 +181,7 @@ namespace InterativeErosionProject
         //private const float TIME_STEP = 0.1f;
         //if the size of the mesh does not match the size of the texture 
         //the y axis needs to be scaled 
+        [SerializeField]
         private float scaleY = (float)TOTAL_GRID_SIZE / (float)TEX_SIZE;
 
         ///<summary>Size of 1 mesh in vertexes</summary>
@@ -208,8 +209,8 @@ namespace InterativeErosionProject
         {
             //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
             lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
-            water = new LayerWithErosion("Water", TEX_SIZE, 1f, this);
-            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 0.003298697f );
+            water = new LayerWithErosion("Water", TEX_SIZE, 1f, this, 0f, 4184, 1f, 1f);
+            atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 0.003298697f);
 
             layersColors[0].a = 0.98f;
             layersColors[1].a = 0.98f;
@@ -307,11 +308,11 @@ namespace InterativeErosionProject
             if (simulateWaterFlow)
             {
                 // add rain
-                
+
                 if (rainInputAmount > 0.0f)
                 {
-                    atmosphere.Rain(water,lava, terrainField.READ);
-                    
+                    atmosphere.Rain(water, lava, terrainField.READ);
+
                 }
 
                 if (waterInputAmount > 0f)
@@ -334,6 +335,7 @@ namespace InterativeErosionProject
                 water.CalcWaterVelocity(timeStep);
 
                 atmosphere.Flow(terrainField.READ, -1f);
+                atmosphere.CalcWaterVelocity(timeStep);
             }
 
 
@@ -367,7 +369,6 @@ namespace InterativeErosionProject
                 if (evaporationConstant > 0.0f)
                 {
                     atmosphere.Evaporate(water, lava, terrainField.READ);
-                    
                 }
             }
 
@@ -388,7 +389,7 @@ namespace InterativeErosionProject
             currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
             currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
             currentOverlay.getMaterial().SetVector("_LavaColor", layersColors[4]);
-            
+
 
             currentOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
             currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
@@ -418,7 +419,6 @@ namespace InterativeErosionProject
             {
                 //SendDefaultLandShaderData();
                 materials.arrowsMat.SetFloat("_ScaleY", scaleY);
-                materials.arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
                 materials.arrowsMat.SetTexture("_Terrain", terrainField.READ);
                 materials.arrowsMat.SetTexture("_Water", water.main.READ);
                 materials.arrowsMat.SetTexture("_WaterVelocity", water.velocity.READ);
@@ -437,10 +437,19 @@ namespace InterativeErosionProject
             {
                 //SendDefaultLandShaderData();
                 materials.arrowsMat.SetFloat("_ScaleY", scaleY);
-                materials.arrowsMat.SetFloat("_TexSize", (float)TEX_SIZE);
                 materials.arrowsMat.SetTexture("_Terrain", terrainField.READ);
                 materials.arrowsMat.SetTexture("_Water", water.main.READ);
                 materials.arrowsMat.SetTexture("_WaterVelocity", magmaVelocity.READ);
+                materials.arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
+                materials.arrowsMat.SetFloat("_Width", 0.03f);
+            }
+            else if (currentOverlay == Overlay.AtmosphereVelocity)
+            {
+                //SendDefaultLandShaderData();
+                materials.arrowsMat.SetFloat("_ScaleY", scaleY);
+                materials.arrowsMat.SetTexture("_Terrain", terrainField.READ);
+                materials.arrowsMat.SetTexture("_Water", water.main.READ);
+                materials.arrowsMat.SetTexture("_WaterVelocity", atmosphere.velocity.READ);
                 materials.arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
                 materials.arrowsMat.SetFloat("_Width", 0.03f);
             }
