@@ -138,7 +138,6 @@ namespace InterativeErosionProject
         [SerializeField]
         private DoubleDataTexture terrainField;
 
-
         [SerializeField]
         ///<summary> Contains regolith amount.Regolith is quasi-liquid at the bottom of water flow</summary>
         private DoubleDataTexture regolithField;
@@ -146,7 +145,6 @@ namespace InterativeErosionProject
         [SerializeField]
         ///<summary> Moved regolith amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB</summary>
         private DoubleDataTexture regolithOutFlow;
-
 
         /// <summary> Used for non-water erosion aka slippering of material</summary>
         [SerializeField]
@@ -191,8 +189,7 @@ namespace InterativeErosionProject
         public float CELL_AREA = 1.0f; //CELL_LENGTH*CELL_LENGTH
         public const float GRAVITY = 9.81f;
 
-
-        private Overlay currentOverlay = Overlay.Default;
+        private Overlay landOverlay = Overlay.Default;
 
         //private readonly
         [SerializeField]
@@ -209,7 +206,7 @@ namespace InterativeErosionProject
         {
             //lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.98f, this, 0.8f, 790f, 873f, 1473f);
             lava = new LayerWithTemperature("Lava", TEX_SIZE, 0.95f, this, 0.8f, 790f, 0f, 1e-9f);
-            water = new LayerWithErosion("Water", TEX_SIZE, 1f, this, 0f, 4184, 1f, 1f);
+            water = new LayerWithErosion("Water", TEX_SIZE, 1f, this, 0.5f, 4184, 1f, 1f);
             atmosphere = new LayerAtmosphere("Atmosphere", TEX_SIZE, 1f, this, 0.4f, 111f, 1f, 3f, 120f, 0.003298697f);
 
             layersColors[0].a = 0.98f;
@@ -360,7 +357,10 @@ namespace InterativeErosionProject
                 //lava.main.ChangeValueGaussWithHeat(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 1500f));                
                 lava.main.ChangeValueGaussWithHeat(lavaInputPoint, lavaInputRadius, new Vector4(lavaInputAmount, 0f, 0f, 1500f));
             if (heatExchange)
+            {
                 lava.HeatExchange();
+                atmosphere.HeatExchange();
+            }
             lava.SetFilterMode(FilterMode.Bilinear);
 
             if (simulateWaterFlow)
@@ -384,38 +384,38 @@ namespace InterativeErosionProject
         }
         private void SendDefaultLandShaderData()
         {
-            currentOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
-            currentOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
-            currentOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
-            currentOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
-            currentOverlay.getMaterial().SetVector("_LavaColor", layersColors[4]);
+            landOverlay.getMaterial().SetVector("_LayerColor0", layersColors[0]);
+            landOverlay.getMaterial().SetVector("_LayerColor1", layersColors[1]);
+            landOverlay.getMaterial().SetVector("_LayerColor2", layersColors[2]);
+            landOverlay.getMaterial().SetVector("_LayerColor3", layersColors[3]);
+            landOverlay.getMaterial().SetVector("_LavaColor", layersColors[4]);
 
 
-            currentOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
-            currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
-            currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
-            currentOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
-            currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
+            landOverlay.getMaterial().SetTexture("_Lava", lava.main.READ);
+            landOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
+            landOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
+            landOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
+            landOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
         }
         private void UpdateMesh()
         {
             // updating meshes
 
-            if (currentOverlay == Overlay.Default)
+            if (landOverlay == Overlay.Default)
             {
                 SendDefaultLandShaderData();
             }
-            else if (currentOverlay == Overlay.Deposition)
+            else if (landOverlay == Overlay.Deposition)
             {
                 SendDefaultLandShaderData();
-                currentOverlay.getMaterial().SetTexture("_SedimentDepositionField", water.sedimentDeposition.READ);
+                landOverlay.getMaterial().SetTexture("_SedimentDepositionField", water.sedimentDeposition.READ);
             }
-            else if (currentOverlay == Overlay.Dissolution)
+            else if (landOverlay == Overlay.Dissolution)
             {
                 SendDefaultLandShaderData();
-                currentOverlay.getMaterial().SetTexture("_SedimentDepositionField", water.sedimentDeposition.READ);
+                landOverlay.getMaterial().SetTexture("_SedimentDepositionField", water.sedimentDeposition.READ);
             }
-            else if (currentOverlay == Overlay.WaterVelocity)
+            else if (landOverlay == Overlay.WaterVelocity)
             {
                 //SendDefaultLandShaderData();
                 materials.arrowsMat.SetFloat("_ScaleY", scaleY);
@@ -425,15 +425,16 @@ namespace InterativeErosionProject
                 materials.arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
                 materials.arrowsMat.SetFloat("_Width", 0.03f);
             }
-            else if (currentOverlay == Overlay.Plates)
+            else if (landOverlay == Overlay.Plates)
             {
-                currentOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
-                currentOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
-                currentOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
-                currentOverlay.getMaterial().SetTexture("_MagmaVelocity", magmaVelocity.READ);
-                currentOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
+                SendDefaultLandShaderData();
+                landOverlay.getMaterial().SetFloat("_ScaleY", scaleY);
+                landOverlay.getMaterial().SetFloat("_TexSize", (float)TEX_SIZE);
+                landOverlay.getMaterial().SetTexture("_MainTex", terrainField.READ);
+                landOverlay.getMaterial().SetTexture("_MagmaVelocity", magmaVelocity.READ);
+                landOverlay.getMaterial().SetFloat("_Layers", (float)TERRAIN_LAYERS);
             }
-            else if (currentOverlay == Overlay.PlatesVelocity)
+            else if (landOverlay == Overlay.PlatesVelocity)
             {
                 //SendDefaultLandShaderData();
                 materials.arrowsMat.SetFloat("_ScaleY", scaleY);
@@ -443,7 +444,7 @@ namespace InterativeErosionProject
                 materials.arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
                 materials.arrowsMat.SetFloat("_Width", 0.03f);
             }
-            else if (currentOverlay == Overlay.AtmosphereVelocity)
+            else if (landOverlay == Overlay.AtmosphereVelocity)
             {
                 //SendDefaultLandShaderData();
                 materials.arrowsMat.SetFloat("_ScaleY", scaleY);
@@ -453,11 +454,17 @@ namespace InterativeErosionProject
                 materials.arrowsMat.SetFloat("_LengthMultiplier", arrowMultiplier);
                 materials.arrowsMat.SetFloat("_Width", 0.03f);
             }
-            else if (currentOverlay == Overlay.Rain)
+            else if (landOverlay == Overlay.Rain)
             {
                 SendDefaultLandShaderData();
-                currentOverlay.getMaterial().SetTexture("_Rain", atmosphere.getRain());
+                landOverlay.getMaterial().SetTexture("_Rain", atmosphere.getRain());
             }
+            else if (landOverlay == Overlay.AtmosphereTemperature)
+            {
+                SendDefaultLandShaderData();
+                landOverlay.getMaterial().SetTexture("_Atmosphere", atmosphere.main.READ);
+            }
+
 
             materials.m_waterMat.SetTexture("_SedimentField", water.sedimentField.READ);
             materials.m_waterMat.SetTexture("_VelocityField", water.velocity.READ);
@@ -475,10 +482,10 @@ namespace InterativeErosionProject
             materials.atmosphereRender.SetFloat("_AtmoHeight", atmosphere.getBasicHeight());
             materials.atmosphereRender.SetFloat("_TexSize", (float)TEX_SIZE);
 
-            materials.atmosphereRenderDownSide.SetTexture("_MainTex", atmosphere.main.READ);
-            materials.atmosphereRenderDownSide.SetFloat("_ScaleY", scaleY);
-            materials.atmosphereRenderDownSide.SetFloat("_AtmoHeight", atmosphere.getBasicHeight());
-            materials.atmosphereRenderDownSide.SetFloat("_TexSize", (float)TEX_SIZE);
+            //materials.atmosphereRenderDownSide.SetTexture("_MainTex", atmosphere.main.READ);
+            //materials.atmosphereRenderDownSide.SetFloat("_ScaleY", scaleY);
+            //materials.atmosphereRenderDownSide.SetFloat("_AtmoHeight", atmosphere.getBasicHeight());
+            //materials.atmosphereRenderDownSide.SetFloat("_TexSize", (float)TEX_SIZE);
 
             //lavaMat.SetFloat("_ScaleY", scaleY);
             //lavaMat.SetFloat("_TexSize", (float)TEX_SIZE);
@@ -1068,9 +1075,9 @@ namespace InterativeErosionProject
         }
         public void SetOverlay(Overlay overlay)
         {
-            this.currentOverlay = overlay;
+            this.landOverlay = overlay;
 
-            if (currentOverlay.isArrow())
+            if (landOverlay.isArrow())
                 foreach (var item in arrowsObjects)
                     item.SetActive(true);
             else
@@ -1078,7 +1085,7 @@ namespace InterativeErosionProject
                 foreach (var item in arrowsObjects)
                     item.SetActive(false);
                 foreach (var item in gridLand)
-                    item.GetComponent<Renderer>().material = currentOverlay.getMaterial();
+                    item.GetComponent<Renderer>().material = landOverlay.getMaterial();
             }
         }
 

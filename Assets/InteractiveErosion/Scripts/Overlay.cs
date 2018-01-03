@@ -19,6 +19,7 @@ namespace InterativeErosionProject
         static public readonly Overlay PlatesVelocity = new Overlay("Plates velocity", null, true);
         static public readonly Overlay Rain = new Overlay("Rain", "RainOverlay", false);
         static public readonly Overlay AtmosphereVelocity = new Overlay("Atmosphere velocity", null, true);
+        static public readonly Overlay AtmosphereTemperature= new Overlay("Atmosphere temperature", "AtmosphereTemperatureOverlay", false);
         private readonly string name;
         private Material material;
         private readonly string materialPath;

@@ -44,7 +44,7 @@ Shader "Erosion/HeatExchange"
 		if (amount > 0.0)
 		{
 			float temperature = oldValue.a;
-			float QChange = _StefanBoltzmannConstant*pow(temperature, 4)*_Emissivity *-1 * T;
+			float QChange = _StefanBoltzmannConstant*pow(temperature, 4)*_Emissivity *-1 * T + 342 * amount;
 			
 			{ 				
 				float temperatureChange = QChange / (_HeatCapacity * amount);//* amount

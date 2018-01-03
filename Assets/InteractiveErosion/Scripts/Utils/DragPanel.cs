@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using System.Collections;
 using System;
 
+//v2
 public interface IRefreshable
 {
     void Refresh();

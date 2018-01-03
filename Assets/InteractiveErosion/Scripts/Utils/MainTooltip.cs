@@ -3,6 +3,9 @@ using System.Collections;
 using UnityEngine.UI;
 using System;
 
+/// <summary>
+/// Controls core of tooltip. V2
+/// </summary>
 public class MainTooltip : MonoBehaviour
 {
     //manually selectable padding for the background image

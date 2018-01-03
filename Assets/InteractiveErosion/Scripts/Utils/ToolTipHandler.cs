@@ -3,23 +3,24 @@ using UnityEngine.EventSystems;
 using System.Collections;
 using System;
 /// <summary>
-/// Newest version of the class. 
+/// Provides tooltip to gameobject. Relies on MainTooltip class. V2
 /// </summary>
 public class ToolTipHandler : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField]
     private Func<string> dynamicText;
+
     [SerializeField]
     private string text;
+
     [SerializeField]
     private bool isDynamic;
-    //[SerializeField]
-    protected MainTooltip tooltipHolder;
-    private bool inside;
+
     [SerializeField]
     private bool useDynamicUpdate;
 
-   
+    protected MainTooltip tooltipHolder;
+    private bool inside;
     protected void Start()
     {
         tooltipHolder = MainTooltip.get();

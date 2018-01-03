@@ -12,5 +12,4 @@ public class AppExit : MonoBehaviour {
         Application.Quit();
 #endif
     }
-
 }

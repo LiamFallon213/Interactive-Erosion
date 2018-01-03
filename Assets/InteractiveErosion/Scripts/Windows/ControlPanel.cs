@@ -21,19 +21,25 @@ namespace InterativeErosionProject
     }
     public class ControlPanel : Window
     {
-        public Text text;
-        public Dropdown actionDD, materialChoiseDD, overlayDD;
+        //private Text text;
+        [SerializeField]
+        private Dropdown actionDD, materialChoiseDD, overlayDD;
 
-        public GameObject mapPointer;
-        public DragPanel infoWindow;
-        public ErosionSim sim;
+        [SerializeField]
+        private GameObject mapPointer;
+
+        [SerializeField]
+        private DragPanel infoWindow;
+
+        [SerializeField]
+        private ErosionSim sim;
 
         [SerializeField]
         private Plane referencePlane = new Plane(Vector3.up, Vector3.zero);
 
         static public Vector2 selectedPoint;
-        static public Action selectedAction = Action.Add;
-        internal static MaterialsForEditing selectedMaterial = MaterialsForEditing.water;
+        static private Action selectedAction = Action.Add;
+        static private MaterialsForEditing selectedMaterial = MaterialsForEditing.water;
         private Vector3 lastClick;
 
         public override void Refresh()

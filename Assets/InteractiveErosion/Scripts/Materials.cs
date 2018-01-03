@@ -7,7 +7,7 @@ public class Materials : MonoBehaviour
     public ComputeShader shader;
     ///<summary> Used for rendering</summary>
     public Material landRender, m_waterMat, arrowsMat, lavaMat, atmosphereRender, atmosphereRenderDownSide, 
-        rainOverlay;
+        rainOverlay, atmosphereTemperatureOverlay;
     ///<summary> Used for rendering</summary>
     //public Material[] overlays;
 
