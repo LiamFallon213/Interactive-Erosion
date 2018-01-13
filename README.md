@@ -7,6 +7,10 @@ I wanted to add ice and lava layers, but got much more ideas in process!!
 <img src="https://i.imgur.com/DU4cini.png" width="480">
 <img src="https://i.imgur.com/JWPgypa.png" width="480">
 
+Video:
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/9R8hk3Yn_nI/0.jpg)](https://www.youtube.com/watch?v=9R8hk3Yn_nI)
+
 Heavy screenshots:
 
 https://i.imgur.com/FGxkEwy.jpg
