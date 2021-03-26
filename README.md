@@ -1,8 +1,6 @@
 # Why forked (Nashhet)
 I wanted to add ice and lava layers, but got much more ideas in process!!
 
-[![Waffle.io - Columns and their card count](https://badge.waffle.io/Nashet/Interactive-Erosion.svg?columns=all)](https://waffle.io/Nashet/Interactive-Erosion)
-
 <img src="https://i.imgur.com/Bxg7RKQ.png" width="480">
 <img src="https://i.imgur.com/DU4cini.png" width="480">
 <img src="https://i.imgur.com/JWPgypa.png" width="480">
