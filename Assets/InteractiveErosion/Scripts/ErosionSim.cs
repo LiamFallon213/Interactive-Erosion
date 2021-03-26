@@ -137,7 +137,7 @@ namespace InterativeErosionProject
         /// <summary>Viscosity of regolith</summary>
         public float regolithDamping = 0.85f;
 
-        /// <summary> Viscosity of water</summary>        
+      //  /// <summary> Viscosity of water</summary>        
         //public float waterDamping = 1f;
 
         /// <summary>Higher number will increase dissolution rate. Or not</summary>
@@ -156,13 +156,12 @@ namespace InterativeErosionProject
         [SerializeField]
         private DoubleDataTexture terrainField;
 
-
+		///<summary> Contains regolith amount.Regolith is quasi-liquid at the bottom of water flow</summary>
         [SerializeField]
-        ///<summary> Contains regolith amount.Regolith is quasi-liquid at the bottom of water flow</summary>
         private DoubleDataTexture regolithField;
 
+		/// <summary> Moved regolith amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB</summary>
         [SerializeField]
-        ///<summary> Moved regolith amount in format ARGB : A - flowLeft, R - flowR, G -  flowT, B - flowB</summary>
         private DoubleDataTexture regolithOutFlow;
 
         
@@ -288,8 +287,8 @@ namespace InterativeErosionProject
             {
                 if (talusAngle[i] < 90.0f)
                 {
-                    float talusAngle = (Mathf.PI * this.talusAngle[i]) / 180.0f;
-                    float maxHeightDif = Mathf.Tan(talusAngle) * CELL_LENGTH;
+                    float talusAngle2 = (Mathf.PI * this.talusAngle[i]) / 180.0f;
+                    float maxHeightDif = Mathf.Tan(talusAngle2) * CELL_LENGTH;
 
                     m_slippageHeightMat.SetFloat("_TexSize", (float)TEX_SIZE);
                     m_slippageHeightMat.SetFloat("_Layers", (float)(i + 1));
@@ -358,9 +357,10 @@ namespace InterativeErosionProject
             {
                 water.SimulateErosion(terrainField, dissolvingConstant, minTiltAngle, TERRAIN_LAYERS, timeStep);
             }
+
             //if (simulateRigolith)
             //{
-            //    DisintegrateAndDeposit();
+			//    DisintegrateAndDeposit ();
             //    FlowLiquid(regolithField, regolithOutFlow, regolithDamping);
             //}
             if (simulateTectonics)
@@ -772,6 +772,10 @@ namespace InterativeErosionProject
             //m_terrainField.SetValue(new Vector4(10f, 2f, 2f, 2f), entireMap);
             terrainField.SetValue(new Vector4(10f, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
         }
+		public void RaiseLand() //added by Liam
+		{
+			terrainField.ChangeValue(new Vector4(10f, 0f, 0f, 0f), WorldSide.EntireMap.getArea());
+		}
         public void SetMagmaVelocity(RenderTexture tex)
         {
             magmaVelocity.Set(tex);
@@ -888,6 +892,12 @@ namespace InterativeErosionProject
             }
         }
 
+		public void SetOceanWaterLevel(float oceanWaterLevelIn){ // added by Liam
+			oceanWaterLevel = oceanWaterLevelIn;
+		}
+		public void SetOceanFloor(float oceanFloorLevelIn){ // added by Liam
+			oceanDestroySedimentsLevel = oceanFloorLevelIn;
+		}
         public float getTerrainLevel(Vector2 point)
         {
             var vector4 = terrainField.getDataRGBAFloatEF(point);
@@ -1035,6 +1045,12 @@ namespace InterativeErosionProject
         {
             terrainField.Scale(value);
         }
+		public void GloballyAddToTerrainLayer(Vector2 point)
+		{
+			Vector4 layerMask = default(Vector4);
+				layerMask = new Vector4(5, 0f, 0f, 0f);
+			terrainField.ChangeValueGauss(point, 1, layerMask);
+		}
         public void SetOverlay(Overlay overlay)
         {
             this.currentOverlay = overlay;
